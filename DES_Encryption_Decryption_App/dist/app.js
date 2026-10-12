@@ -7,7 +7,7 @@ import { generateKeyScheduleTrace } from './crypto/des/keySchedule.js';
 import { encryptECB, encryptCBC, MODE_CBC, MODE_ECB } from './crypto/des/modes.js';
 import { runAllTests } from './crypto/des/testVectors.js';
 import { getHistory, addHistoryEntry, clearHistory, getVaultStats } from './services/historyManager.js';
-import { SAMPLE_FILES } from './services/samples.js';
+import { SAMPLE_FILES, SAMPLE_TEXTS } from './services/samples.js';
 import { generateKeyQRCodeSVG } from './services/qrGenerator.js';
 import { encryptTextNote, decryptTextNote } from './services/textEncryption.js';
 
@@ -85,8 +85,19 @@ $('brand-home').addEventListener('keydown', (e) => {
     switchView('dashboard');
   }
 });
-$('dash-btn-encrypt').addEventListener('click', () => switchView('encrypt'));
-$('dash-btn-decrypt').addEventListener('click', () => switchView('decrypt'));
+$('dash-btn-encrypt').addEventListener('click', () => {
+  state.encryptContentType = 'file';
+  switchView('encrypt');
+});
+$('dash-btn-encrypt-text')?.addEventListener('click', () => switchView('text'));
+$('dash-click-text-enc')?.addEventListener('click', () => switchView('text'));
+
+$('dash-btn-decrypt').addEventListener('click', () => {
+  state.decryptContentType = 'file';
+  switchView('decrypt');
+});
+$('dash-btn-decrypt-text')?.addEventListener('click', () => switchView('text'));
+$('dash-click-text-dec')?.addEventListener('click', () => switchView('text'));
 
 // ==========================================
 // DASHBOARD & SAMPLES
@@ -111,6 +122,26 @@ function renderSampleChips() {
   if (!container) return;
   container.innerHTML = '';
 
+  // 1. Secret Text Note Samples (Direct to Text Vault)
+  SAMPLE_TEXTS.forEach(sample => {
+    const chip = document.createElement('div');
+    chip.className = 'sample-file-chip';
+    chip.style.borderColor = 'rgba(6, 182, 212, 0.45)';
+    chip.innerHTML = `
+      <span class="sample-chip-icon">${sample.icon}</span>
+      <div class="sample-chip-info">
+        <span class="sample-chip-name">${sample.name}</span>
+        <span class="sample-chip-meta">${sample.typeDescription} (Text)</span>
+      </div>
+    `;
+    chip.addEventListener('click', () => {
+      loadTextIntoVault(sample.text);
+      switchView('text');
+    });
+    container.appendChild(chip);
+  });
+
+  // 2. Binary File Samples (Direct to File Encryptor)
   SAMPLE_FILES.forEach(sample => {
     const chip = document.createElement('div');
     chip.className = 'sample-file-chip';
@@ -1498,6 +1529,322 @@ async function executeTextDecryption() {
 }
 
 // ==========================================
+// TEXT VAULT STUDIO CONTROLLER
+// ==========================================
+function loadTextIntoVault(text) {
+  const tvPlain = $('tv-input-plain');
+  if (tvPlain) {
+    tvPlain.value = text;
+    updateTextVaultTelemetry(text);
+  }
+  const encTextInput = $('input-encrypt-text');
+  if (encTextInput) {
+    encTextInput.value = text;
+    encTextInput.dispatchEvent(new Event('input'));
+  }
+}
+
+function updateTextVaultTelemetry(text) {
+  const chars = text ? text.length : 0;
+  const bytes = text ? new TextEncoder().encode(text).length : 0;
+  const blocks = bytes === 0 ? 1 : Math.floor(bytes / 8) + 1;
+  const padding = 8 - (bytes % 8);
+
+  if ($('tv-chars-count')) $('tv-chars-count').textContent = `${chars.toLocaleString()} Chars`;
+  if ($('tv-bytes-count')) $('tv-bytes-count').textContent = `${bytes.toLocaleString()} Bytes (UTF-8)`;
+  if ($('tv-blocks-count')) $('tv-blocks-count').textContent = `${blocks.toLocaleString()} DES Blocks`;
+  if ($('tv-padding-count')) $('tv-padding-count').textContent = `${padding} PKCS#7 Pad Bytes`;
+}
+
+function showTextNotification(elId, msg, type = 'info') {
+  const el = $(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `notification-banner show notif-${type}`;
+  setTimeout(() => {
+    el.className = 'notification-banner';
+  }, 4000);
+}
+
+function setupTextVaultStudioHandlers() {
+  const tvPlain = $('tv-input-plain');
+  if (tvPlain) {
+    tvPlain.addEventListener('input', () => {
+      updateTextVaultTelemetry(tvPlain.value);
+    });
+  }
+
+  $('tv-load-memo')?.addEventListener('click', () => {
+    if (SAMPLE_TEXTS && SAMPLE_TEXTS[0]) loadTextIntoVault(SAMPLE_TEXTS[0].text);
+  });
+  $('tv-load-token')?.addEventListener('click', () => {
+    if (SAMPLE_TEXTS && SAMPLE_TEXTS[1]) loadTextIntoVault(SAMPLE_TEXTS[1].text);
+  });
+  $('tv-clear-plain')?.addEventListener('click', () => {
+    if (tvPlain) {
+      tvPlain.value = '';
+      updateTextVaultTelemetry('');
+    }
+    if ($('tv-cipher-box')) $('tv-cipher-box').style.display = 'none';
+  });
+
+  let tvKeyFmt = 'ascii';
+  const tabAscii = $('tv-key-tab-ascii');
+  const tabHex = $('tv-key-tab-hex');
+  const tvKeyInput = $('tv-input-key');
+
+  tabAscii?.addEventListener('click', () => {
+    tvKeyFmt = 'ascii';
+    tabAscii.classList.add('active');
+    tabHex.classList.remove('active');
+    if (tvKeyInput) {
+      tvKeyInput.placeholder = 'Enter 8-character key (e.g. MyKey123)';
+      tvKeyInput.maxLength = 8;
+    }
+  });
+
+  tabHex?.addEventListener('click', () => {
+    tvKeyFmt = 'hex';
+    tabHex.classList.add('active');
+    tabAscii.classList.remove('active');
+    if (tvKeyInput) {
+      tvKeyInput.placeholder = 'Enter 16 hex digits (e.g. 0123456789ABCDEF)';
+      tvKeyInput.maxLength = 16;
+    }
+  });
+
+  const generateTvKey = () => {
+    const rawBytes = generateRandomKey();
+    if (tvKeyInput) {
+      if (tvKeyFmt === 'hex') {
+        tvKeyInput.value = bytesToHex(rawBytes);
+      } else {
+        const safeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+        let str = '';
+        for (let i = 0; i < 8; i++) {
+          str += safeChars.charAt(rawBytes[i] % safeChars.length);
+        }
+        tvKeyInput.value = str;
+      }
+      tvKeyInput.type = 'text';
+      if ($('tv-btn-toggle-key')) $('tv-btn-toggle-key').textContent = 'Hide Key';
+    }
+  };
+
+  $('tv-btn-gen-key')?.addEventListener('click', generateTvKey);
+  // Initial key generation
+  generateTvKey();
+
+  $('tv-btn-toggle-key')?.addEventListener('click', () => {
+    if (!tvKeyInput) return;
+    const isPass = tvKeyInput.type === 'password';
+    tvKeyInput.type = isPass ? 'text' : 'password';
+    $('tv-btn-toggle-key').textContent = isPass ? 'Hide Key' : 'Show Key';
+  });
+
+  $('tv-btn-copy-key')?.addEventListener('click', async () => {
+    if (!tvKeyInput || !tvKeyInput.value) return;
+    try {
+      await navigator.clipboard.writeText(tvKeyInput.value);
+      showTextNotification('tv-enc-notification', 'DES Key copied to clipboard!', 'success');
+    } catch {
+      showTextNotification('tv-enc-notification', 'Clipboard unavailable.', 'error');
+    }
+  });
+
+  let tvMode = MODE_CBC;
+  const btnCbc = $('tv-mode-cbc');
+  const btnEcb = $('tv-mode-ecb');
+  btnCbc?.addEventListener('click', () => {
+    tvMode = MODE_CBC;
+    btnCbc.classList.add('active');
+    btnEcb.classList.remove('active');
+  });
+  btnEcb?.addEventListener('click', () => {
+    tvMode = MODE_ECB;
+    btnEcb.classList.add('active');
+    btnCbc.classList.remove('active');
+  });
+
+  let tvFmt = 'base64';
+  const btnB64 = $('tv-fmt-b64');
+  const btnHex = $('tv-fmt-hex');
+  btnB64?.addEventListener('click', () => {
+    tvFmt = 'base64';
+    btnB64.classList.add('active');
+    btnHex.classList.remove('active');
+  });
+  btnHex?.addEventListener('click', () => {
+    tvFmt = 'hex';
+    btnHex.classList.add('active');
+    btnB64.classList.remove('active');
+  });
+
+  $('tv-btn-encrypt')?.addEventListener('click', async () => {
+    const plainText = tvPlain ? tvPlain.value : '';
+    if (!plainText || !plainText.trim()) {
+      showTextNotification('tv-enc-notification', 'Please enter a text note to encrypt.', 'error');
+      return;
+    }
+    const keyVal = tvKeyInput ? tvKeyInput.value.trim() : '';
+    if (!keyVal) {
+      showTextNotification('tv-enc-notification', 'Please enter or generate an 8-byte DES key.', 'error');
+      return;
+    }
+
+    let keyBytes;
+    try {
+      keyBytes = parseDesKey(keyVal, tvKeyFmt);
+    } catch (err) {
+      showTextNotification('tv-enc-notification', err.message, 'error');
+      return;
+    }
+
+    try {
+      const result = await encryptTextNote({
+        plainText,
+        keyBytes,
+        mode: tvMode,
+        outputFormat: tvFmt
+      });
+
+      if ($('tv-output-cipher')) $('tv-output-cipher').value = result.formattedOutput;
+      if ($('tv-enc-status')) $('tv-enc-status').textContent = `DES-${result.mode} Encrypted (${result.outputFormat.toUpperCase()}) ✓`;
+      if ($('tv-cipher-box')) $('tv-cipher-box').style.display = 'block';
+
+      addHistoryEntry({
+        operation: 'ENCRYPT',
+        filename: 'secret_note.txt',
+        fileSize: result.originalSizeBytes,
+        mode: result.mode,
+        hashHex: result.hashHex,
+        status: 'SUCCESS'
+      });
+      updateDashboardStats();
+      showTextNotification('tv-enc-notification', 'Text note successfully encrypted with DES!', 'success');
+    } catch (err) {
+      showTextNotification('tv-enc-notification', `Encryption failed: ${err.message}`, 'error');
+    }
+  });
+
+  $('tv-btn-copy-cipher')?.addEventListener('click', async () => {
+    const cipher = $('tv-output-cipher')?.value;
+    if (!cipher) return;
+    try {
+      await navigator.clipboard.writeText(cipher);
+      showTextNotification('tv-enc-notification', 'Ciphertext copied to clipboard!', 'success');
+    } catch {
+      showTextNotification('tv-enc-notification', 'Clipboard unavailable.', 'error');
+    }
+  });
+
+  $('tv-btn-send-to-dec')?.addEventListener('click', () => {
+    const cipher = $('tv-output-cipher')?.value;
+    if (!cipher) return;
+    const decCipherInput = $('tv-input-cipher');
+    const decKeyInput = $('tv-dec-input-key');
+    if (decCipherInput) decCipherInput.value = cipher;
+    if (decKeyInput && tvKeyInput) decKeyInput.value = tvKeyInput.value;
+    showTextNotification('tv-dec-notification', 'Ciphertext & matching key transferred to Decrypt panel!', 'success');
+    decCipherInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  $('tv-btn-download-cipher')?.addEventListener('click', () => {
+    const cipher = $('tv-output-cipher')?.value;
+    if (!cipher) return;
+    downloadTextBlob(cipher, 'encrypted_note.txt');
+  });
+
+  $('tv-clear-dec')?.addEventListener('click', () => {
+    if ($('tv-input-cipher')) $('tv-input-cipher').value = '';
+    if ($('tv-output-plain')) $('tv-output-plain').value = '';
+    if ($('tv-plain-box')) $('tv-plain-box').style.display = 'none';
+  });
+
+  $('tv-btn-sync-key')?.addEventListener('click', () => {
+    if (tvKeyInput && $('tv-dec-input-key')) {
+      $('tv-dec-input-key').value = tvKeyInput.value;
+      showTextNotification('tv-dec-notification', 'Transferred encryption key.', 'success');
+    }
+  });
+
+  $('tv-btn-toggle-dec-key')?.addEventListener('click', () => {
+    const input = $('tv-dec-input-key');
+    if (!input) return;
+    const isPass = input.type === 'password';
+    input.type = isPass ? 'text' : 'password';
+    $('tv-btn-toggle-dec-key').textContent = isPass ? 'Hide Key' : 'Show Key';
+  });
+
+  $('tv-btn-decrypt')?.addEventListener('click', async () => {
+    const encStr = $('tv-input-cipher')?.value.trim();
+    if (!encStr) {
+      showTextNotification('tv-dec-notification', 'Please paste ciphertext note to decrypt.', 'error');
+      return;
+    }
+    const decKeyVal = $('tv-dec-input-key')?.value.trim();
+    if (!decKeyVal) {
+      showTextNotification('tv-dec-notification', 'Please enter your matching DES key.', 'error');
+      return;
+    }
+
+    let keyBytes;
+    try {
+      if (/^[0-9a-fA-F]{16}$/.test(decKeyVal)) {
+        keyBytes = parseDesKey(decKeyVal, 'hex');
+      } else {
+        keyBytes = parseDesKey(decKeyVal, 'ascii');
+      }
+    } catch (err) {
+      showTextNotification('tv-dec-notification', err.message, 'error');
+      return;
+    }
+
+    try {
+      const result = await decryptTextNote({
+        encryptedString: encStr,
+        keyBytes
+      });
+
+      if ($('tv-output-plain')) $('tv-output-plain').value = result.plainText;
+      if ($('tv-dec-status')) $('tv-dec-status').textContent = `Integrity Verified ✓ (${result.charCount} chars, ${result.byteCount} bytes)`;
+      if ($('tv-plain-box')) $('tv-plain-box').style.display = 'block';
+
+      addHistoryEntry({
+        operation: 'DECRYPT',
+        filename: 'restored_note.txt',
+        fileSize: result.byteCount,
+        mode: result.mode,
+        hashHex: result.hashHex,
+        status: 'SUCCESS'
+      });
+      updateDashboardStats();
+      showTextNotification('tv-dec-notification', 'Text note successfully decrypted and verified!', 'success');
+    } catch (err) {
+      showTextNotification('tv-dec-notification', err.message, 'error');
+      if ($('tv-plain-box')) $('tv-plain-box').style.display = 'none';
+    }
+  });
+
+  $('tv-btn-copy-plain')?.addEventListener('click', async () => {
+    const plain = $('tv-output-plain')?.value;
+    if (!plain) return;
+    try {
+      await navigator.clipboard.writeText(plain);
+      showTextNotification('tv-dec-notification', 'Restored note copied to clipboard!', 'success');
+    } catch {
+      showTextNotification('tv-dec-notification', 'Clipboard unavailable.', 'error');
+    }
+  });
+
+  $('tv-btn-download-plain')?.addEventListener('click', () => {
+    const plain = $('tv-output-plain')?.value;
+    if (!plain) return;
+    downloadTextBlob(plain, 'restored_note.txt');
+  });
+}
+
+// ==========================================
 // INITIALIZATION
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
@@ -1506,6 +1853,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupEncryptHandlers();
   setupDecryptHandlers();
   setupTextModeHandlers();
+  setupTextVaultStudioHandlers();
   setupLabHandlers();
   setupInspectorHandlers();
   setupHistoryHandlers();
@@ -1513,3 +1861,4 @@ window.addEventListener('DOMContentLoaded', () => {
   updateDashboardStats();
   generateAndSetEncryptKey();
 });
+

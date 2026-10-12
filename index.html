@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="DES Vault — Universal binary file encryption and decryption system implementing 16-round Feistel DES (FIPS 46-3) with custom .dvlt container format and SHA-256 integrity verification.">
-  <title>DES Vault — Universal File Encryption & Decryption System</title>
+  <meta name="description" content="DES Vault — Universal binary file and secret text encryption system implementing 16-round Feistel DES (FIPS 46-3) with custom .dvlt container format, Base64/Hex encoding, and SHA-256 integrity verification.">
+  <title>DES Vault — Universal File & Text Encryption System</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -13,7 +13,7 @@
   <!-- Top Academic Security Notice -->
   <aside class="security-banner" role="note" aria-label="Educational security notice">
     <span class="shield-icon">🛡️</span>
-    <span><strong>Academic Security Notice:</strong> DES is included for educational and academic demonstration purposes. DES uses a 56-bit effective key and is not considered secure for modern production systems.</span>
+    <span><strong>Academic Security Notice:</strong> DES is included for educational and academic demonstration purposes. DES uses a 56-bit effective key. Encrypt and decrypt arbitrary binary files and secret text notes with authentic 16-round Feistel DES.</span>
   </aside>
 
   <!-- Main Navigation Header -->
@@ -27,7 +27,7 @@
       </div>
       <div class="brand-text">
         <div class="brand-title">DES <span class="vault-highlight">VAULT</span></div>
-        <div class="brand-subtitle">Universal File Cryptography</div>
+        <div class="brand-subtitle">Universal File & Text Cryptography</div>
       </div>
     </div>
 
@@ -45,13 +45,17 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
         Decrypt
       </button>
+      <button class="nav-btn" data-view="text" id="nav-text">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Text Vault
+      </button>
       <button class="nav-btn" data-view="lab" id="nav-lab">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
         DES Lab
       </button>
       <button class="nav-btn" data-view="inspector" id="nav-inspector">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        File Inspector
+        File & Text Inspector
       </button>
       <button class="nav-btn" data-view="history" id="nav-history">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -89,64 +93,109 @@
     <section class="view-container active" id="view-dashboard">
       <div class="hero-section">
         <div class="hero-tag">Academic Cryptography Platform · FIPS 46-3</div>
-        <h1 class="hero-title">DES Vault — <span class="gradient-text">Universal File Encryption</span></h1>
+        <h1 class="hero-title">DES Vault — <span class="gradient-text">Universal File & Text Cryptography</span></h1>
         <p class="hero-subtitle">
-          Encrypt arbitrary binary files using the authentic Data Encryption Standard (DES) algorithm and restore them with byte-for-byte perfection using the matching 8-byte key.
+          Encrypt arbitrary binary files (PDF, images, audio, ZIP, docs) AND confidential text notes using authentic 16-round Feistel DES (FIPS 46-3) with byte-level precision, Base64/Hex encoding, and SHA-256 integrity verification.
         </p>
         <div class="hero-badges">
+          <span class="hero-badge-pill">📁 Any Binary File Format</span>
+          <span class="hero-badge-pill">📝 Secret Text & Notes</span>
           <span class="hero-badge-pill">64-Bit Block Size</span>
           <span class="hero-badge-pill">56-Bit Effective Key</span>
           <span class="hero-badge-pill">16 Feistel Rounds</span>
           <span class="hero-badge-pill">DES-CBC & DES-ECB</span>
-          <span class="hero-badge-pill">Custom .dvlt Container</span>
-          <span class="hero-badge-pill">SHA-256 Integrity Check</span>
+          <span class="hero-badge-pill">Base64 & Hex Encodings</span>
+          <span class="hero-badge-pill">SHA-256 Verified</span>
         </div>
       </div>
 
-      <!-- Quick Action Cards Grid -->
+      <!-- Quick Action Cards Grid (4-Card Hub: Files & Text) -->
       <div class="dashboard-actions-grid">
-        <!-- Encrypt Card -->
+        <!-- 1. Encrypt Binary File Card -->
         <div class="action-card encrypt-card">
           <div class="action-card-header">
             <div class="action-icon-circle">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
-            <span class="action-step-tag">Step 01 / Protect</span>
+            <span class="action-step-tag">Step 01 / File Vault</span>
           </div>
-          <h2>Encrypt File</h2>
+          <h2>Encrypt Binary File</h2>
           <p class="action-desc">
-            Upload any arbitrary binary file (PDF, DOCX, PNG, ZIP, MP4, code, or binary), inspect its File DNA, generate an 8-byte key, and seal it into an encrypted <code>.dvlt</code> container.
+            Upload arbitrary binary files (PDF, DOCX, PNG, ZIP, MP4, code, or binary). Inspect File DNA, generate an 8-byte key, and seal it into an encrypted <code>.dvlt</code> container.
           </p>
           <button class="action-btn-main" id="dash-btn-encrypt">
             <span>Encrypt a File</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
           <div class="quick-drop-area" id="dash-drop-encrypt">
-            <span>⚡ Or drag & drop any file here to begin</span>
+            <span>⚡ Or drag & drop any file here</span>
           </div>
         </div>
 
-        <!-- Decrypt Card -->
+        <!-- 2. Encrypt Secret Text Card -->
+        <div class="action-card encrypt-card" style="border-color: rgba(6, 182, 212, 0.35);">
+          <div class="action-card-header">
+            <div class="action-icon-circle" style="color: var(--cyan-bright); background: rgba(6, 182, 212, 0.12);">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <span class="action-step-tag" style="color: var(--cyan-bright); border-color: rgba(6, 182, 212, 0.3);">Step 01 / Text Vault</span>
+          </div>
+          <h2>Encrypt Secret Text Note</h2>
+          <p class="action-desc">
+            Type or paste confidential notes, messages, passwords, or tokens. Encrypt with DES and generate Base64 or Hex ciphertext with integrity headers.
+          </p>
+          <button class="action-btn-main" id="dash-btn-encrypt-text">
+            <span>Encrypt Secret Text</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+          <div class="quick-drop-area" id="dash-click-text-enc">
+            <span>⚡ Click to open interactive text encryptor</span>
+          </div>
+        </div>
+
+        <!-- 3. Decrypt Binary File Card -->
         <div class="action-card decrypt-card">
           <div class="action-card-header">
             <div class="action-icon-circle">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
             </div>
-            <span class="action-step-tag">Step 02 / Restore</span>
+            <span class="action-step-tag">Step 02 / File Restore</span>
           </div>
-          <h2>Decrypt File</h2>
+          <h2>Decrypt Binary File</h2>
           <p class="action-desc">
-            Restore a DES-encrypted <code>.dvlt</code> file using its 8-byte encryption key. The container validates the signature, decrypts blocks, verifies SHA-256 checksums, and restores the original file.
+            Restore a DES-encrypted <code>.dvlt</code> file using its 8-byte key. The container validates signature, decrypts blocks, verifies SHA-256 checksums, and restores original format.
           </p>
           <button class="action-btn-main" id="dash-btn-decrypt">
             <span>Decrypt a File</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </button>
           <div class="quick-drop-area" id="dash-drop-decrypt">
-            <span>⚡ Or drag & drop a .dvlt file here to restore</span>
+            <span>⚡ Or drag & drop a .dvlt file here</span>
+          </div>
+        </div>
+
+        <!-- 4. Decrypt Secret Text Card -->
+        <div class="action-card decrypt-card" style="border-color: rgba(16, 185, 129, 0.35);">
+          <div class="action-card-header">
+            <div class="action-icon-circle" style="color: var(--emerald-success); background: rgba(16, 185, 129, 0.12);">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L4 19l-2 3 3-2 13.5-13.5z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <span class="action-step-tag" style="color: var(--emerald-success); border-color: rgba(16, 185, 129, 0.3);">Step 02 / Text Restore</span>
+          </div>
+          <h2>Decrypt Secret Text Note</h2>
+          <p class="action-desc">
+            Paste Base64 or Hex encrypted ciphertext with your 8-byte DES key to restore the original confidential note and verify SHA-256 fingerprint.
+          </p>
+          <button class="action-btn-main" id="dash-btn-decrypt-text" style="background: linear-gradient(135deg, var(--emerald-success), #059669);">
+            <span>Decrypt Secret Text</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+          <div class="quick-drop-area" id="dash-click-text-dec">
+            <span>⚡ Click to restore encrypted text note</span>
           </div>
         </div>
       </div>
+
 
       <!-- Live Vault Statistics Row -->
       <div class="stats-banner">
@@ -697,6 +746,188 @@
               </button>
               <button type="button" class="btn-secondary-action" id="btn-download-dec-text">Download Note (.txt)</button>
               <button type="button" class="btn-secondary-action" id="btn-clear-dec-text">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW: TEXT VAULT (DIRECT SECRET NOTES)     -->
+    <!-- ========================================== -->
+    <section class="view-container" id="view-text">
+      <div class="section-header-block">
+        <span class="section-tag">Universal Cryptography · Text & Secret Notes</span>
+        <h2 class="section-title">Text Vault — Secret Note Encryption & Decryption</h2>
+        <p class="section-desc">
+          Encrypt confidential messages, passwords, API tokens, or memos using authentic 16-round Feistel DES (FIPS 46-3). Generate portable Base64 or Hexadecimal ciphertexts, or restore them with SHA-256 integrity verification.
+        </p>
+      </div>
+
+      <div class="text-vault-grid">
+        <!-- Panel 1: Encrypt Plaintext -->
+        <div class="workflow-card text-studio-card">
+          <div class="studio-head">
+            <div class="studio-title-badge">
+              <span class="action-icon-circle" style="width: 36px; height: 36px; color: var(--cyan-bright); background: rgba(6, 182, 212, 0.12);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <div>
+                <h3 style="font-size: 1.15rem; color: #fff; margin: 0;">Encrypt Plaintext Note</h3>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">Transforms confidential text into DES ciphertext</span>
+              </div>
+            </div>
+            <!-- Quick Sample Chips -->
+            <div class="sample-text-chips-row">
+              <span style="font-size: 0.75rem; color: var(--text-dim); margin-right: 4px;">Samples:</span>
+              <button type="button" class="sample-chip-mini" id="tv-load-memo">📝 Agent Memo</button>
+              <button type="button" class="sample-chip-mini" id="tv-load-token">🔑 API Token</button>
+              <button type="button" class="sample-chip-mini" id="tv-clear-plain">Clear</button>
+            </div>
+          </div>
+
+          <!-- Plaintext Textarea -->
+          <div class="text-editor-container" style="margin-top: 14px;">
+            <label for="tv-input-plain" style="font-size: 0.8125rem; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; display: block;">Plaintext Message / Secret Note</label>
+            <textarea id="tv-input-plain" class="text-note-textarea" placeholder="Type or paste any text or confidential message here..." spellcheck="false" style="min-height: 130px;"></textarea>
+            <div class="text-stats-bar">
+              <span class="text-stat-chip" id="tv-chars-count">0 Chars</span>
+              <span class="text-stat-chip" id="tv-bytes-count">0 Bytes (UTF-8)</span>
+              <span class="text-stat-chip" id="tv-blocks-count">1 DES Block</span>
+              <span class="text-stat-chip" id="tv-padding-count">8 PKCS#7 Pad Bytes</span>
+            </div>
+          </div>
+
+          <!-- Key Management -->
+          <div class="key-mgmt-section" style="margin-top: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <label style="font-weight: 700; font-size: 0.875rem; color: #fff;">DES Key (64-Bit / 56 Effective)</label>
+              <div class="key-format-pills">
+                <button type="button" class="format-pill-btn active" id="tv-key-tab-ascii">ASCII (8 Chars)</button>
+                <button type="button" class="format-pill-btn" id="tv-key-tab-hex">Hex (16 Digits)</button>
+              </div>
+            </div>
+            <div class="key-input-wrapper">
+              <input type="password" id="tv-input-key" class="key-input" placeholder="Enter 8-character key" maxlength="16" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="key-actions-row" style="margin-top: 8px;">
+              <button type="button" class="btn-key-action btn-key-gen" id="tv-btn-gen-key">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                Generate Key
+              </button>
+              <button type="button" class="btn-key-action" id="tv-btn-toggle-key">Show Key</button>
+              <button type="button" class="btn-key-action" id="tv-btn-copy-key">Copy Key</button>
+            </div>
+          </div>
+
+          <!-- Cipher Mode and Encoding Format -->
+          <div style="display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 140px;">
+              <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Mode</label>
+              <div style="display: flex; gap: 6px; margin-top: 4px;">
+                <button type="button" class="format-pill-btn active" id="tv-mode-cbc">DES-CBC</button>
+                <button type="button" class="format-pill-btn" id="tv-mode-ecb">DES-ECB</button>
+              </div>
+            </div>
+            <div style="flex: 1; min-width: 160px;">
+              <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Output Format</label>
+              <div style="display: flex; gap: 6px; margin-top: 4px;">
+                <button type="button" class="format-pill-btn active" id="tv-fmt-b64">Base64</button>
+                <button type="button" class="format-pill-btn" id="tv-fmt-hex">Hexadecimal</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Encrypt Trigger Button -->
+          <div style="margin-top: 20px;">
+            <button type="button" class="action-btn-main" id="tv-btn-encrypt" style="padding: 14px 20px; font-size: 1rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Encrypt Secret Note</span>
+            </button>
+          </div>
+
+          <!-- Notification -->
+          <div class="notification-banner" id="tv-enc-notification"></div>
+
+          <!-- Encrypted Output Area -->
+          <div id="tv-cipher-box" style="display: none; margin-top: 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <label style="font-size: 0.8125rem; font-weight: 700; color: var(--cyan-bright);">Encrypted Note Ciphertext</label>
+              <span style="font-size: 0.75rem; color: var(--emerald-success);" id="tv-enc-status">DES-CBC Encrypted ✓</span>
+            </div>
+            <textarea id="tv-output-cipher" class="text-note-textarea" readonly spellcheck="false" style="min-height: 110px; color: var(--cyan-bright);"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn-download-main" id="tv-btn-copy-cipher" style="padding: 8px 16px; font-size: 0.8125rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy Ciphertext
+              </button>
+              <button type="button" class="btn-secondary-action" id="tv-btn-send-to-dec" style="color: var(--cyan-bright); border-color: rgba(6, 182, 212, 0.4);">
+                Transfer to Decrypt Studio →
+              </button>
+              <button type="button" class="btn-secondary-action" id="tv-btn-download-cipher">Download (.txt)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Decrypt Ciphertext -->
+        <div class="workflow-card text-studio-card">
+          <div class="studio-head">
+            <div class="studio-title-badge">
+              <span class="action-icon-circle" style="width: 36px; height: 36px; color: var(--emerald-success); background: rgba(16, 185, 129, 0.12);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              </span>
+              <div>
+                <h3 style="font-size: 1.15rem; color: #fff; margin: 0;">Decrypt Ciphertext Note</h3>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">Restores original note and verifies SHA-256</span>
+              </div>
+            </div>
+            <button type="button" class="sample-chip-mini" id="tv-clear-dec">Clear</button>
+          </div>
+
+          <!-- Ciphertext Input Textarea -->
+          <div class="text-editor-container" style="margin-top: 14px;">
+            <label for="tv-input-cipher" style="font-size: 0.8125rem; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; display: block;">Encrypted Ciphertext (Base64 or Hex)</label>
+            <textarea id="tv-input-cipher" class="text-note-textarea" placeholder="Paste Base64 or Hex ciphertext note here, or click 'Transfer to Decrypt Studio' from the encrypt panel..." spellcheck="false" style="min-height: 130px;"></textarea>
+          </div>
+
+          <!-- Decryption Key Management -->
+          <div class="key-mgmt-section" style="margin-top: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <label style="font-weight: 700; font-size: 0.875rem; color: #fff;">Matching DES Decryption Key</label>
+              <button type="button" class="sample-chip-mini" id="tv-btn-sync-key" style="color: var(--cyan-bright);">Use Encrypt Key</button>
+            </div>
+            <div class="key-input-wrapper">
+              <input type="password" id="tv-dec-input-key" class="key-input" placeholder="Enter matching 8-char or 16-hex key" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="key-actions-row" style="margin-top: 8px;">
+              <button type="button" class="btn-key-action" id="tv-btn-toggle-dec-key">Show Key</button>
+            </div>
+          </div>
+
+          <!-- Decrypt Trigger Button -->
+          <div style="margin-top: 20px;">
+            <button type="button" class="action-btn-main" id="tv-btn-decrypt" style="background: linear-gradient(135deg, var(--emerald-success), #059669); padding: 14px 20px; font-size: 1rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              <span>Decrypt & Verify Note</span>
+            </button>
+          </div>
+
+          <!-- Notification -->
+          <div class="notification-banner" id="tv-dec-notification"></div>
+
+          <!-- Decrypted Plaintext Output Area -->
+          <div id="tv-plain-box" style="display: none; margin-top: 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <label style="font-size: 0.8125rem; font-weight: 700; color: var(--emerald-success);">Decrypted Plaintext Note</label>
+              <span style="font-size: 0.75rem; color: var(--emerald-success);" id="tv-dec-status">Integrity Verified ✓</span>
+            </div>
+            <textarea id="tv-output-plain" class="text-note-textarea" readonly spellcheck="false" style="min-height: 110px; color: #fff;"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn-download-main" id="tv-btn-copy-plain" style="background: linear-gradient(135deg, var(--emerald-success), #059669); padding: 8px 16px; font-size: 0.8125rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy Restored Note
+              </button>
+              <button type="button" class="btn-secondary-action" id="tv-btn-download-plain">Download (.txt)</button>
             </div>
           </div>
         </div>

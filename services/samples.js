@@ -109,3 +109,28 @@ This file tests arbitrary text encryption, PKCS#7 padding validation, and SHA-25
     getData: () => sampleZipBytes
   }
 ];
+
+export const SAMPLE_TEXTS = [
+  {
+    id: 'sample-memo',
+    name: 'Classified Agent Memo',
+    typeDescription: 'Secret Text Note',
+    icon: '📝',
+    text: `TOP SECRET // LEVEL 4 CLEARANCE
+Subject: DES Feistel Network Security Assessment
+Agent: Sentinel-09
+Date: October 2026
+
+The Data Encryption Standard (DES) uses 16 Feistel rounds with 8 distinct S-boxes.
+Effective key strength is 56 bits after dropping 8 parity bits.
+This secret note proves that arbitrary Unicode and ASCII strings encrypt and decrypt seamlessly with DES-CBC and PKCS#7 padding.`
+  },
+  {
+    id: 'sample-token',
+    name: 'Server API Credentials',
+    typeDescription: 'JSON Secret Payload',
+    icon: '🔑',
+    text: `{\n  "environment": "production",\n  "api_endpoint": "https://vault.internal.network/v1",\n  "access_token": "dvlt_live_9f82c3a104b78e",\n  "signature_algorithm": "DES-CBC",\n  "integrity_hash": "SHA-256"\n}`
+  }
+];
+

@@ -1750,4 +1750,70 @@ footer.app-footer {
   .exp-demo-box {
     grid-template-columns: 1fr;
   }
+  .text-vault-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ========================================== */
+/* TEXT VAULT STUDIO STYLES                  */
+/* ========================================== */
+.text-vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.text-studio-card {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.studio-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.studio-title-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sample-text-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sample-chip-mini {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sample-chip-mini:hover {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: var(--border-glow);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.key-format-pills {
+  display: flex;
+  gap: 6px;
 }
