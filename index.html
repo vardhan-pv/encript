@@ -212,69 +212,107 @@
       </div>
 
       <div class="workflow-card">
-        <!-- Step 1: Upload Dropzone -->
-        <div class="dropzone-container" id="encrypt-dropzone">
-          <div class="dropzone-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-          </div>
-          <div class="dropzone-title">Drop any file here to encrypt</div>
-          <div class="dropzone-subtitle">PDF, Word, Excel, Images, Audio, Video, Archives, Code, or raw binary · Up to 50 MB</div>
-          <button type="button" class="dropzone-btn" id="btn-browse-encrypt">Browse File from Device</button>
-          <input type="file" id="input-encrypt-file" class="hidden-file-input">
+        <!-- Content Type Selector: Binary File vs Text Note -->
+        <div class="content-type-toggle-bar">
+          <button type="button" class="type-toggle-btn active" id="toggle-encrypt-file">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Binary File Vault
+          </button>
+          <button type="button" class="type-toggle-btn" id="toggle-encrypt-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Text / Secret Note
+          </button>
         </div>
 
-        <!-- Selected File Information Card -->
-        <div class="selected-file-card" id="card-encrypt-file-selected" style="display: none;">
-          <div class="file-card-left">
-            <div class="file-format-badge" id="encrypt-file-ext-badge">BIN</div>
-            <div class="file-details-col">
-              <span class="file-card-name" id="encrypt-file-name">filename.bin</span>
-              <div class="file-card-meta">
-                <span id="encrypt-file-type">MIME: application/octet-stream</span>
-                <span>•</span>
-                <span id="encrypt-file-size">0 KB</span>
-                <span>•</span>
-                <span id="encrypt-file-date">Just now</span>
-              </div>
+        <!-- Panel 1: Binary File Mode -->
+        <div id="panel-encrypt-file">
+          <!-- Step 1: Upload Dropzone -->
+          <div class="dropzone-container" id="encrypt-dropzone">
+            <div class="dropzone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
             </div>
+            <div class="dropzone-title">Drop any file here to encrypt</div>
+            <div class="dropzone-subtitle">PDF, Word, Excel, Images, Audio, Video, Archives, Code, or raw binary · Up to 50 MB</div>
+            <button type="button" class="dropzone-btn" id="btn-browse-encrypt">Browse File from Device</button>
+            <input type="file" id="input-encrypt-file" class="hidden-file-input">
           </div>
-          <button type="button" class="file-card-remove-btn" id="btn-remove-encrypt-file">Remove</button>
-        </div>
 
-        <!-- File DNA Analysis Card -->
-        <div class="file-dna-card" id="card-encrypt-dna" style="display: none;">
-          <div class="file-dna-head">
-            <span class="file-dna-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><path d="M12 2v20"/></svg>
-              File DNA & Integrity Analysis
-            </span>
-            <span style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">PRE-ENCRYPTION TELEMETRY</span>
-          </div>
-          <div class="file-dna-grid">
-            <div class="dna-data-box">
-              <div class="dna-box-label">SHA-256 Fingerprint Checksum</div>
-              <div class="dna-box-val" id="dna-encrypt-hash">Calculating...</div>
-            </div>
-            <div class="dna-data-box">
-              <div class="dna-box-label">DES Blocks & PKCS#7 Padding</div>
-              <div class="dna-box-val" id="dna-encrypt-blocks">— Blocks · — Bytes pad</div>
-            </div>
-            <div class="dna-data-box">
-              <div class="dna-box-label">Shannon Entropy (Randomness)</div>
-              <div class="dna-box-val" id="dna-encrypt-entropy">0.000 / 8.000 bits/byte</div>
-              <div class="entropy-meter-wrap">
-                <div class="entropy-bar-track">
-                  <div class="entropy-bar-fill" id="dna-entropy-fill" style="width: 0%;"></div>
+          <!-- Selected File Information Card -->
+          <div class="selected-file-card" id="card-encrypt-file-selected" style="display: none;">
+            <div class="file-card-left">
+              <div class="file-format-badge" id="encrypt-file-ext-badge">BIN</div>
+              <div class="file-details-col">
+                <span class="file-card-name" id="encrypt-file-name">filename.bin</span>
+                <div class="file-card-meta">
+                  <span id="encrypt-file-type">MIME: application/octet-stream</span>
+                  <span>•</span>
+                  <span id="encrypt-file-size">0 KB</span>
+                  <span>•</span>
+                  <span id="encrypt-file-date">Just now</span>
                 </div>
-                <div class="entropy-tagline" id="dna-entropy-tag">Analyzing bytes...</div>
               </div>
+            </div>
+            <button type="button" class="file-card-remove-btn" id="btn-remove-encrypt-file">Remove</button>
+          </div>
+
+          <!-- File DNA Analysis Card -->
+          <div class="file-dna-card" id="card-encrypt-dna" style="display: none;">
+            <div class="file-dna-head">
+              <span class="file-dna-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><path d="M12 2v20"/></svg>
+                File DNA & Integrity Analysis
+              </span>
+              <span style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">PRE-ENCRYPTION TELEMETRY</span>
+            </div>
+            <div class="file-dna-grid">
+              <div class="dna-data-box">
+                <div class="dna-box-label">SHA-256 Fingerprint Checksum</div>
+                <div class="dna-box-val" id="dna-encrypt-hash">Calculating...</div>
+              </div>
+              <div class="dna-data-box">
+                <div class="dna-box-label">DES Blocks & PKCS#7 Padding</div>
+                <div class="dna-box-val" id="dna-encrypt-blocks">— Blocks · — Bytes pad</div>
+              </div>
+              <div class="dna-data-box">
+                <div class="dna-box-label">Shannon Entropy (Randomness)</div>
+                <div class="dna-box-val" id="dna-encrypt-entropy">0.000 / 8.000 bits/byte</div>
+                <div class="entropy-meter-wrap">
+                  <div class="entropy-bar-track">
+                    <div class="entropy-bar-fill" id="dna-entropy-fill" style="width: 0%;"></div>
+                  </div>
+                  <div class="entropy-tagline" id="dna-entropy-tag">Analyzing bytes...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File Preview Container -->
+            <div class="file-preview-box" id="encrypt-preview-box" style="display: none;">
+              <div class="file-preview-title">File Content Preview</div>
+              <div id="encrypt-preview-content"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Text Note Mode -->
+        <div id="panel-encrypt-text" style="display: none;">
+          <div class="text-editor-container">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <label for="input-encrypt-text" style="font-weight: 700; font-size: 0.875rem; color: #fff;">Your Secret Note / Plaintext</label>
+              <span style="font-size: 0.75rem; color: var(--text-dim);">UTF-8 · Arbitrary Unicode</span>
+            </div>
+            <textarea id="input-encrypt-text" class="text-note-textarea" placeholder="Write or paste any confidential note or text message here to encrypt with DES..." spellcheck="false"></textarea>
+            <div class="text-stats-bar">
+              <span class="text-stat-chip" id="text-chars-count">0 Chars</span>
+              <span class="text-stat-chip" id="text-bytes-count">0 Bytes (UTF-8)</span>
+              <span class="text-stat-chip" id="text-blocks-count">1 DES Block</span>
+              <span class="text-stat-chip" id="text-padding-count">8 PKCS#7 Pad Bytes</span>
             </div>
           </div>
 
-          <!-- File Preview Container -->
-          <div class="file-preview-box" id="encrypt-preview-box" style="display: none;">
-            <div class="file-preview-title">File Content Preview</div>
-            <div id="encrypt-preview-content"></div>
+          <div class="format-selector-row">
+            <span>Ciphertext Output Encoding:</span>
+            <button type="button" class="format-pill-btn active" id="btn-format-b64" data-fmt="base64">Base64 (Standard)</button>
+            <button type="button" class="format-pill-btn" id="btn-format-hex" data-fmt="hex">Hexadecimal</button>
           </div>
         </div>
 
@@ -445,6 +483,25 @@
             </button>
           </div>
         </div>
+
+        <!-- Encrypted Text Result Section -->
+        <div id="text-encrypt-success-box" style="display: none; margin-top: 24px;">
+          <div class="text-editor-container" style="border-color: rgba(6, 182, 212, 0.4); background: rgba(4, 7, 14, 0.95);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <label style="font-weight: 700; font-size: 0.875rem; color: var(--cyan-bright);">Encrypted DES Note Ciphertext</label>
+              <span style="font-size: 0.75rem; color: var(--emerald-success);" id="text-enc-status">DES-CBC Encrypted ✓</span>
+            </div>
+            <textarea id="output-encrypt-text" class="text-note-textarea" readonly spellcheck="false" style="min-height: 120px; color: var(--cyan-bright);"></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+              <button type="button" class="btn-download-main" id="btn-copy-enc-text" style="padding: 10px 20px; font-size: 0.875rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy Ciphertext Note
+              </button>
+              <button type="button" class="btn-secondary-action" id="btn-download-enc-text">Download Note (.txt)</button>
+              <button type="button" class="btn-secondary-action" id="btn-clear-enc-text">Clear</button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -454,52 +511,78 @@
     <section class="view-container" id="view-decrypt">
       <div class="section-header-block">
         <span class="section-tag">Stage 02 / Decryption & Integrity Verification</span>
-        <h2 class="section-title">Decrypt & Restore Original File</h2>
+        <h2 class="section-title">Decrypt & Restore Original File or Text</h2>
         <p class="section-desc">
-          Upload any <code>.dvlt</code> encrypted container. The vault inspects the container header, requests the matching DES key, decrypts the 64-bit blocks, verifies the PKCS#7 padding, and validates the SHA-256 fingerprint against the original.
+          Restore any <code>.dvlt</code> encrypted binary container or paste an encrypted text note. The vault validates the container header, requests the matching DES key, decrypts the 64-bit blocks, verifies the PKCS#7 padding, and validates the SHA-256 fingerprint.
         </p>
       </div>
 
       <div class="workflow-card">
-        <!-- Step 1: Upload .dvlt Container -->
-        <div class="dropzone-container" id="decrypt-dropzone">
-          <div class="dropzone-icon" style="color: var(--emerald-success); background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3);">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-          </div>
-          <div class="dropzone-title">Drop your .dvlt encrypted file here</div>
-          <div class="dropzone-subtitle">Accepts DES Vault containers (.dvlt) created with this application</div>
-          <button type="button" class="dropzone-btn" id="btn-browse-decrypt">Browse Encrypted File</button>
-          <input type="file" id="input-decrypt-file" class="hidden-file-input" accept=".dvlt,*/*">
+        <!-- Content Type Selector for Decrypt: Binary File vs Text Note -->
+        <div class="content-type-toggle-bar">
+          <button type="button" class="type-toggle-btn active" id="toggle-decrypt-file">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Binary .dvlt Container
+          </button>
+          <button type="button" class="type-toggle-btn" id="toggle-decrypt-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Text / Secret Note
+          </button>
         </div>
 
-        <!-- Container Inspection Telemetry Card -->
-        <div class="file-dna-card" id="card-decrypt-container-info" style="display: none; border-color: rgba(16, 185, 129, 0.3);">
-          <div class="file-dna-head">
-            <span class="file-dna-title" style="color: var(--emerald-success);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              DES Vault Container Signature Detected
-            </span>
-            <span style="font-size: 0.75rem; color: #34d399; font-family: var(--font-mono); background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px;">
-              SIGNATURE: DVLT v1.0
-            </span>
+        <!-- Panel 1: Binary File Decryption -->
+        <div id="panel-decrypt-file">
+          <!-- Step 1: Upload .dvlt Container -->
+          <div class="dropzone-container" id="decrypt-dropzone">
+            <div class="dropzone-icon" style="color: var(--emerald-success); background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3);">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            </div>
+            <div class="dropzone-title">Drop your .dvlt encrypted file here</div>
+            <div class="dropzone-subtitle">Accepts DES Vault containers (.dvlt) created with this application</div>
+            <button type="button" class="dropzone-btn" id="btn-browse-decrypt">Browse Encrypted File</button>
+            <input type="file" id="input-decrypt-file" class="hidden-file-input" accept=".dvlt,*/*">
           </div>
-          <div class="file-dna-grid">
-            <div class="dna-data-box">
-              <div class="dna-box-label">Original Filename & Format</div>
-              <div class="dna-box-val" id="dec-meta-name">—</div>
+
+          <!-- Container Inspection Telemetry Card -->
+          <div class="file-dna-card" id="card-decrypt-container-info" style="display: none; border-color: rgba(16, 185, 129, 0.3);">
+            <div class="file-dna-head">
+              <span class="file-dna-title" style="color: var(--emerald-success);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                DES Vault Container Signature Detected
+              </span>
+              <span style="font-size: 0.75rem; color: #34d399; font-family: var(--font-mono); background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px;">
+                SIGNATURE: DVLT v1.0
+              </span>
             </div>
-            <div class="dna-data-box">
-              <div class="dna-box-label">Cipher Algorithm & Mode</div>
-              <div class="dna-box-val" id="dec-meta-algo">DES · CBC Mode</div>
+            <div class="file-dna-grid">
+              <div class="dna-data-box">
+                <div class="dna-box-label">Original Filename & Format</div>
+                <div class="dna-box-val" id="dec-meta-name">—</div>
+              </div>
+              <div class="dna-data-box">
+                <div class="dna-box-label">Cipher Algorithm & Mode</div>
+                <div class="dna-box-val" id="dec-meta-algo">DES · CBC Mode</div>
+              </div>
+              <div class="dna-data-box">
+                <div class="dna-box-label">Stored SHA-256 Checksum Fingerprint</div>
+                <div class="dna-box-val" id="dec-meta-hash" style="font-size: 0.75rem;">—</div>
+              </div>
+              <div class="dna-data-box">
+                <div class="dna-box-label">Encrypted Size & IV</div>
+                <div class="dna-box-val" id="dec-meta-iv">—</div>
+              </div>
             </div>
-            <div class="dna-data-box">
-              <div class="dna-box-label">Stored SHA-256 Checksum Fingerprint</div>
-              <div class="dna-box-val" id="dec-meta-hash" style="font-size: 0.75rem;">—</div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Text Note Decryption -->
+        <div id="panel-decrypt-text" style="display: none;">
+          <div class="text-editor-container">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <label for="input-decrypt-text" style="font-weight: 700; font-size: 0.875rem; color: #fff;">Encrypted Note Ciphertext</label>
+              <span style="font-size: 0.75rem; color: var(--text-dim);">Base64 or Hexadecimal</span>
             </div>
-            <div class="dna-data-box">
-              <div class="dna-box-label">Encrypted Size & IV</div>
-              <div class="dna-box-val" id="dec-meta-iv">—</div>
-            </div>
+            <textarea id="input-decrypt-text" class="text-note-textarea" placeholder="Paste your Base64 or Hex encrypted DES note here..." spellcheck="false"></textarea>
           </div>
         </div>
 
@@ -596,6 +679,25 @@
             <button type="button" class="btn-secondary-action" id="btn-decrypt-another">
               <span>Decrypt Another File</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Decrypted Text Result Box -->
+        <div id="text-decrypt-success-box" style="display: none; margin-top: 24px;">
+          <div class="text-editor-container" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(4, 7, 14, 0.95);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <label style="font-weight: 700; font-size: 0.875rem; color: var(--emerald-success);">Decrypted Plaintext Note</label>
+              <span style="font-size: 0.75rem; color: var(--emerald-success);" id="text-dec-status">Integrity Verified ✓</span>
+            </div>
+            <textarea id="output-decrypt-text" class="text-note-textarea" readonly spellcheck="false" style="min-height: 140px; color: #fff;"></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+              <button type="button" class="btn-download-main" id="btn-copy-dec-text" style="background: linear-gradient(135deg, var(--emerald-success), #059669); padding: 10px 20px; font-size: 0.875rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy Restored Note
+              </button>
+              <button type="button" class="btn-secondary-action" id="btn-download-dec-text">Download Note (.txt)</button>
+              <button type="button" class="btn-secondary-action" id="btn-clear-dec-text">Clear</button>
+            </div>
           </div>
         </div>
       </div>

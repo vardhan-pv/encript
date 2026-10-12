@@ -128,8 +128,9 @@ export function bytesToHex(bytes) {
  */
 export function hexToBytes(hex) {
   const clean = hex.trim();
-  const bytes = new Uint8Array(8);
-  for (let i = 0; i < 8; i++) {
+  const len = clean.length >>> 1;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
     bytes[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
   }
   return bytes;

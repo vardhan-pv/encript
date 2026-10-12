@@ -201,5 +201,31 @@ export async function runAllTests() {
     }
   });
 
+  // Test 10: Unicode & Text Note Encryption / Decryption
+  await runTest('Text Note Mode: Base64 & Hex Unicode text round-trip with integrity verification', async () => {
+    const { encryptTextNote, decryptTextNote } = await import('../../services/textEncryption.js');
+    const noteKey = parseDesKey('NoteKey1', 'ascii');
+    const sampleText = 'Academic DES Project: Hello world! 🔒 Unicode test — ಕನ್ನಡ / 日本語 / Español — 1234567890';
+
+    // Base64 test
+    const encB64 = await encryptTextNote({ plainText: sampleText, keyBytes: noteKey, outputFormat: 'base64' });
+    const decB64 = await decryptTextNote({ encryptedString: encB64.formattedOutput, keyBytes: noteKey });
+    if (decB64.plainText !== sampleText) throw new Error('Base64 text note round-trip failed!');
+
+    // Hex test
+    const encHex = await encryptTextNote({ plainText: sampleText, keyBytes: noteKey, outputFormat: 'hex' });
+    const decHex = await decryptTextNote({ encryptedString: encHex.formattedOutput, keyBytes: noteKey });
+    if (decHex.plainText !== sampleText) throw new Error('Hex text note round-trip failed!');
+
+    // Wrong key rejection
+    let wrongCaught = false;
+    try {
+      await decryptTextNote({ encryptedString: encB64.formattedOutput, keyBytes: parseDesKey('badkey99', 'ascii') });
+    } catch {
+      wrongCaught = true;
+    }
+    if (!wrongCaught) throw new Error('Wrong key was incorrectly accepted for text note!');
+  });
+
   return results;
 }

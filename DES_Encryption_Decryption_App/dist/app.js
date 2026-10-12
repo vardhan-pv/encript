@@ -9,6 +9,7 @@ import { runAllTests } from './crypto/des/testVectors.js';
 import { getHistory, addHistoryEntry, clearHistory, getVaultStats } from './services/historyManager.js';
 import { SAMPLE_FILES } from './services/samples.js';
 import { generateKeyQRCodeSVG } from './services/qrGenerator.js';
+import { encryptTextNote, decryptTextNote } from './services/textEncryption.js';
 
 // DOM selector helper
 const $ = (id) => document.getElementById(id);
@@ -16,12 +17,17 @@ const $ = (id) => document.getElementById(id);
 // Application State
 const state = {
   activeView: 'dashboard',
-  encryptFile: null,       // { file, data: Uint8Array, name, type, size, hashHex, entropy }
-  encryptKeyFormat: 'ascii', // 'ascii' | 'hex' | 'passphrase'
+  encryptContentType: 'file', // 'file' | 'text'
+  decryptContentType: 'file', // 'file' | 'text'
+  textOutputFormat: 'base64',  // 'base64' | 'hex'
+  encryptFile: null,          // { file, data: Uint8Array, name, type, size, hashHex, entropy }
+  encryptKeyFormat: 'ascii',  // 'ascii' | 'hex' | 'passphrase'
   encryptMode: MODE_CBC,
-  encryptedResult: null,   // { containerBytes, filename, originalHashHex, originalSize, mode, keyBytes, keyHex }
-  decryptFile: null,       // { file, data: Uint8Array, inspection }
-  decryptedResult: null,   // { restoredData, filename, extension, mimeType, hashHex }
+  encryptedResult: null,      // { containerBytes, filename, originalHashHex, originalSize, mode, keyBytes, keyHex }
+  encryptedTextResult: null,  // { formattedOutput, hashHex, entropy, mode }
+  decryptFile: null,          // { file, data: Uint8Array, inspection }
+  decryptedResult: null,      // { restoredData, filename, extension, mimeType, hashHex }
+  decryptedTextResult: null,  // { plainText, charCount, byteCount, hashHex }
   currentKeyText: '',
   demoCurrentStep: 0
 };
@@ -448,6 +454,10 @@ function exportCurrentKeyfile() {
 }
 
 async function executeEncryption() {
+  if (state.encryptContentType === 'text') {
+    return executeTextEncryption();
+  }
+
   if (!state.encryptFile) {
     showNotification('encrypt', 'Please select or drop a file to encrypt first.', 'error');
     return;
@@ -685,6 +695,10 @@ function setupDecryptHandlers() {
 }
 
 async function executeDecryption() {
+  if (state.decryptContentType === 'text') {
+    return executeTextDecryption();
+  }
+
   if (!state.decryptFile) {
     showNotification('decrypt', 'Please select or drop a valid .dvlt file first.', 'error');
     return;
@@ -1232,6 +1246,258 @@ function downloadTextBlob(text, filename) {
 }
 
 // ==========================================
+// TEXT NOTE MODE HANDLERS & EXECUTORS
+// ==========================================
+function setupTextModeHandlers() {
+  const toggleEncFile = $('toggle-encrypt-file');
+  const toggleEncText = $('toggle-encrypt-text');
+  const panelEncFile = $('panel-encrypt-file');
+  const panelEncText = $('panel-encrypt-text');
+  const btnRunEncrypt = $('btn-run-encrypt');
+
+  toggleEncFile.addEventListener('click', () => {
+    state.encryptContentType = 'file';
+    toggleEncFile.classList.add('active');
+    toggleEncText.classList.remove('active');
+    panelEncFile.style.display = 'block';
+    panelEncText.style.display = 'none';
+    $('text-encrypt-success-box').style.display = 'none';
+    btnRunEncrypt.querySelector('span').textContent = 'Encrypt & Build .dvlt Container';
+  });
+
+  toggleEncText.addEventListener('click', () => {
+    state.encryptContentType = 'text';
+    toggleEncText.classList.add('active');
+    toggleEncFile.classList.remove('active');
+    panelEncText.style.display = 'block';
+    panelEncFile.style.display = 'none';
+    $('encrypt-success-box').style.display = 'none';
+    btnRunEncrypt.querySelector('span').textContent = 'Encrypt Text Note';
+  });
+
+  // Text telemetry on typing
+  const inputEncText = $('input-encrypt-text');
+  inputEncText.addEventListener('input', () => {
+    const text = inputEncText.value;
+    const chars = text.length;
+    const bytes = new TextEncoder().encode(text).length;
+    const blocks = bytes === 0 ? 1 : Math.floor(bytes / 8) + 1;
+    const padding = 8 - (bytes % 8);
+
+    $('text-chars-count').textContent = `${chars.toLocaleString()} Chars`;
+    $('text-bytes-count').textContent = `${bytes.toLocaleString()} Bytes (UTF-8)`;
+    $('text-blocks-count').textContent = `${blocks.toLocaleString()} DES Blocks`;
+    $('text-padding-count').textContent = `${padding} PKCS#7 Pad Bytes`;
+  });
+
+  // Format selection
+  const btnFmtB64 = $('btn-format-b64');
+  const btnFmtHex = $('btn-format-hex');
+  btnFmtB64.addEventListener('click', () => {
+    state.textOutputFormat = 'base64';
+    btnFmtB64.classList.add('active');
+    btnFmtHex.classList.remove('active');
+  });
+  btnFmtHex.addEventListener('click', () => {
+    state.textOutputFormat = 'hex';
+    btnFmtHex.classList.add('active');
+    btnFmtB64.classList.remove('active');
+  });
+
+  // Text result buttons
+  $('btn-copy-enc-text').addEventListener('click', async () => {
+    const val = $('output-encrypt-text').value;
+    if (!val) return;
+    try {
+      await navigator.clipboard.writeText(val);
+      showNotification('encrypt', 'Encrypted ciphertext copied to clipboard.', 'success');
+    } catch {
+      showNotification('encrypt', 'Clipboard copy unavailable.', 'error');
+    }
+  });
+
+  $('btn-download-enc-text').addEventListener('click', () => {
+    const val = $('output-encrypt-text').value;
+    if (!val) return;
+    downloadTextBlob(val, 'encrypted_note.txt');
+  });
+
+  $('btn-clear-enc-text').addEventListener('click', () => {
+    $('input-encrypt-text').value = '';
+    $('output-encrypt-text').value = '';
+    $('text-encrypt-success-box').style.display = 'none';
+    $('text-chars-count').textContent = '0 Chars';
+    $('text-bytes-count').textContent = '0 Bytes (UTF-8)';
+  });
+
+  // Decrypt Text Mode Toggles
+  const toggleDecFile = $('toggle-decrypt-file');
+  const toggleDecText = $('toggle-decrypt-text');
+  const panelDecFile = $('panel-decrypt-file');
+  const panelDecText = $('panel-decrypt-text');
+  const btnRunDecrypt = $('btn-run-decrypt');
+
+  toggleDecFile.addEventListener('click', () => {
+    state.decryptContentType = 'file';
+    toggleDecFile.classList.add('active');
+    toggleDecText.classList.remove('active');
+    panelDecFile.style.display = 'block';
+    panelDecText.style.display = 'none';
+    $('text-decrypt-success-box').style.display = 'none';
+    btnRunDecrypt.querySelector('span').textContent = 'Decrypt & Verify Integrity';
+  });
+
+  toggleDecText.addEventListener('click', () => {
+    state.decryptContentType = 'text';
+    toggleDecText.classList.add('active');
+    toggleDecFile.classList.remove('active');
+    panelDecText.style.display = 'block';
+    panelDecFile.style.display = 'none';
+    $('decrypt-success-box').style.display = 'none';
+    btnRunDecrypt.querySelector('span').textContent = 'Decrypt Text Note';
+  });
+
+  $('btn-copy-dec-text').addEventListener('click', async () => {
+    const val = $('output-decrypt-text').value;
+    if (!val) return;
+    try {
+      await navigator.clipboard.writeText(val);
+      showNotification('decrypt', 'Decrypted plaintext copied to clipboard.', 'success');
+    } catch {
+      showNotification('decrypt', 'Clipboard copy unavailable.', 'error');
+    }
+  });
+
+  $('btn-download-dec-text').addEventListener('click', () => {
+    const val = $('output-decrypt-text').value;
+    if (!val) return;
+    downloadTextBlob(val, 'decrypted_note.txt');
+  });
+
+  $('btn-clear-dec-text').addEventListener('click', () => {
+    $('input-decrypt-text').value = '';
+    $('output-decrypt-text').value = '';
+    $('text-decrypt-success-box').style.display = 'none';
+  });
+}
+
+async function executeTextEncryption() {
+  const plainText = $('input-encrypt-text').value;
+  if (!plainText || !plainText.trim()) {
+    showNotification('encrypt', 'Please enter a text note to encrypt.', 'error');
+    return;
+  }
+
+  const keyText = $('input-encrypt-key').value.trim();
+  if (!keyText) {
+    showNotification('encrypt', 'Please enter or generate an 8-byte DES key.', 'error');
+    return;
+  }
+
+  let keyBytes;
+  try {
+    if (state.encryptKeyFormat === 'passphrase') {
+      keyBytes = await deriveKeyFromPassphrase(keyText);
+    } else {
+      keyBytes = parseDesKey(keyText, state.encryptKeyFormat);
+    }
+  } catch (err) {
+    showNotification('encrypt', err.message, 'error');
+    return;
+  }
+
+  hideNotification('encrypt');
+  try {
+    const result = await encryptTextNote({
+      plainText,
+      keyBytes,
+      mode: state.encryptMode,
+      outputFormat: state.textOutputFormat
+    });
+
+    state.encryptedTextResult = result;
+    $('output-encrypt-text').value = result.formattedOutput;
+    $('text-enc-status').textContent = `DES-${result.mode} Encrypted (${result.outputFormat.toUpperCase()}) ✓`;
+    $('text-encrypt-success-box').style.display = 'block';
+
+    addHistoryEntry({
+      operation: 'ENCRYPT',
+      filename: 'secret_note.txt',
+      fileSize: result.originalSizeBytes,
+      mode: result.mode,
+      hashHex: result.hashHex,
+      status: 'SUCCESS'
+    });
+    updateDashboardStats();
+    showNotification('encrypt', 'Text note successfully encrypted with DES!', 'success');
+  } catch (err) {
+    showNotification('encrypt', `Text encryption failed: ${err.message}`, 'error');
+  }
+}
+
+async function executeTextDecryption() {
+  const encText = $('input-decrypt-text').value.trim();
+  if (!encText) {
+    showNotification('decrypt', 'Please paste an encrypted Base64 or Hex note.', 'error');
+    return;
+  }
+
+  const keyText = $('input-decrypt-key').value.trim();
+  if (!keyText) {
+    showNotification('decrypt', 'Please enter your matching DES key.', 'error');
+    return;
+  }
+
+  let keyBytes;
+  try {
+    if (/^[0-9a-fA-F]{16}$/.test(keyText)) {
+      keyBytes = parseDesKey(keyText, 'hex');
+    } else {
+      keyBytes = parseDesKey(keyText, 'ascii');
+    }
+  } catch (err) {
+    showNotification('decrypt', err.message, 'error');
+    return;
+  }
+
+  hideNotification('decrypt');
+  try {
+    const result = await decryptTextNote({
+      encryptedString: encText,
+      keyBytes
+    });
+
+    state.decryptedTextResult = result;
+    $('output-decrypt-text').value = result.plainText;
+    $('text-dec-status').textContent = `Integrity Verified ✓ (${result.charCount} chars, ${result.byteCount} bytes)`;
+    $('text-decrypt-success-box').style.display = 'block';
+
+    addHistoryEntry({
+      operation: 'DECRYPT',
+      filename: 'restored_note.txt',
+      fileSize: result.byteCount,
+      mode: result.mode,
+      hashHex: result.hashHex,
+      status: 'SUCCESS'
+    });
+    updateDashboardStats();
+    showNotification('decrypt', 'Text note decrypted successfully and verified!', 'success');
+  } catch (err) {
+    showNotification('decrypt', err.message, 'error');
+    $('text-decrypt-success-box').style.display = 'none';
+
+    addHistoryEntry({
+      operation: 'DECRYPT',
+      filename: 'text_note.txt',
+      fileSize: 0,
+      mode: 'CBC',
+      status: 'FAILED',
+      errorReason: err.message
+    });
+  }
+}
+
+// ==========================================
 // INITIALIZATION
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
@@ -1239,6 +1505,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupDashboardQuickDrops();
   setupEncryptHandlers();
   setupDecryptHandlers();
+  setupTextModeHandlers();
   setupLabHandlers();
   setupInspectorHandlers();
   setupHistoryHandlers();

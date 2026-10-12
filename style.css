@@ -618,6 +618,117 @@ main.app-main {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
+/* Content Type Switcher (File vs Text Note) */
+.content-type-toggle-bar {
+  display: inline-flex;
+  background: rgba(4, 7, 14, 0.7);
+  border: 1px solid var(--border-mid);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+.type-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-fast);
+}
+.type-toggle-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+.type-toggle-btn.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(34, 211, 238, 0.12));
+  color: var(--cyan-bright);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 16px var(--cyan-glow-sm);
+}
+
+/* Text Note Editor Styles */
+.text-editor-container {
+  background: rgba(4, 7, 14, 0.85);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+  transition: all var(--transition-fast);
+}
+.text-editor-container:focus-within {
+  border-color: var(--cyan-bright);
+  box-shadow: 0 0 20px var(--cyan-glow-sm);
+}
+.text-note-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: transparent;
+  border: none;
+  color: #f1f5f9;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+.text-note-textarea::placeholder {
+  color: var(--text-dim);
+}
+.text-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+.text-stat-chip {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Format Selector (Base64 vs Hex) */
+.format-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.format-pill-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.format-pill-btn:hover {
+  color: #fff;
+}
+.format-pill-btn.active {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: var(--cyan-primary);
+  color: var(--cyan-bright);
+}
+
 /* Upload Dropzone */
 .dropzone-container {
   border: 2px dashed rgba(34, 211, 238, 0.25);
