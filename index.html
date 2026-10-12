@@ -1,8 +1,967 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DES encryption and decryption for educational notes and file demonstrations."><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>Codovate Vault — DES Encryption & Decryption</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"><script type="module" src="app.mjs"></script></head><body>
-<header><a class="brand" href="./"><span class="mark">V</span> CODOVATE <b>VAULT</b></a><span class="local">ON YOUR DEVICE</span></header>
-<main><div class="intro"><p class="eyebrow">DES ENCRYPTION & DECRYPTION</p><h1>Explore encryption.<br><em>Understand DES.</em></h1><p>Encrypt a note or file with an 8-byte DES key.<br>Decrypt it with the same key.</p></div>
-<section class="workspace" aria-label="Encryption workspace"><div class="topline"><span class="step">01 / WORKSPACE</span><span>DES-CBC · 16 ROUNDS</span></div><div class="modes" role="group" aria-label="Action"><button id="encrypt" class="selected" aria-pressed="true">Encrypt</button><button id="decrypt" aria-pressed="false">Decrypt</button></div><div class="types" role="group" aria-label="Content type"><button id="note" class="selected" aria-pressed="true">Text note</button><button id="file" aria-pressed="false">File</button></div>
-<div class="warning" role="note"><strong>Educational use only</strong><p>DES has only 56 effective key bits and is obsolete. Do not use it for sensitive data. DES-CBC does not authenticate content or reliably detect tampering.</p></div><form id="form"><div id="note-field"><label id="input-label" for="input">Your note</label><textarea id="input" placeholder="Write or paste a note for your DES demonstration…" spellcheck="false"></textarea></div><div id="file-field" hidden><label class="drop" for="upload"><span class="file-icon">▤</span><strong id="file-label">Choose a file</strong><span id="file-hint">Any file type · up to 20 MB</span><input id="upload" type="file"></label></div>
-<label for="key-format">Key format</label><select id="key-format"><option value="text">Text — 8 ASCII characters</option><option value="hex">Hex — 16 hexadecimal digits</option></select><label for="password">DES key</label><div class="password"><input id="password" type="password" autocomplete="off" placeholder="Example: mykey123" required maxlength="16"><button id="show" type="button" aria-label="Show DES key">Show</button></div><p id="password-hint" class="hint">Exactly 8 printable ASCII characters. DES ignores the parity bit in each byte.</p><div id="confirm-field"><label for="confirm">Confirm DES key</label><input id="confirm" type="password" autocomplete="off" maxlength="16" placeholder="Enter your DES key again"></div><button id="submit" class="primary" type="submit">Encrypt note</button><p id="status" role="status" aria-live="polite"></p></form>
-<div id="result" hidden><div class="result-head"><label for="output" id="output-label">Encrypted note</label><button type="button" id="clear">Clear workspace</button></div><textarea id="output" readonly spellcheck="false"></textarea><p id="result-info" class="hint"></p><div class="result-actions"><button id="copy">Copy result</button><button id="download">Download</button></div></div>
-</section><aside><div class="aside-title">Single DES, step by step.</div><div class="fact"><span>01</span><div><h2>It runs on your device</h2><p>Encryption happens in your browser. This app does not upload your content or DES key.</p></div></div><div class="fact"><span>02</span><div><h2>Use the same DES key</h2><p>The key is 8 bytes, with 56 effective bits. You need the same key to decrypt your result.</p></div></div><div class="fact"><span>03</span><div><h2>Save before you leave</h2><p>Download or copy your result. Your workspace is cleared when you reload or close this page.</p></div></div><details><summary>How encryption works</summary><p>Single DES uses 64-bit blocks and 16 Feistel rounds. This app implements the initial and final permutations, key schedule, expansion, S-boxes and P permutation directly in JavaScript. CBC uses a fresh random 8-byte IV with PKCS#7 padding. Text results use Base64.</p><p>Only DES packages created with this version are supported. Earlier AES packages and raw DES ciphertext are not compatible. File names are encrypted inside the package. Wrong keys usually cause an error, but DES-CBC cannot guarantee integrity.</p><p>DES is a historical algorithm for learning and demonstrations. This application has not undergone an independent security audit.</p><a href="https://csrc.nist.gov/pubs/fips/46-3/final" target="_blank" rel="noreferrer">NIST DES specification (withdrawn)</a></details></aside></main><footer><span>CODOVATE SOLUTIONS</span><span>No accounts. No content storage.</span></footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DES Vault — Universal binary file encryption and decryption system implementing 16-round Feistel DES (FIPS 46-3) with custom .dvlt container format and SHA-256 integrity verification.">
+  <title>DES Vault — Universal File Encryption & Decryption System</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Academic Security Notice -->
+  <aside class="security-banner" role="note" aria-label="Educational security notice">
+    <span class="shield-icon">🛡️</span>
+    <span><strong>Academic Security Notice:</strong> DES is included for educational and academic demonstration purposes. DES uses a 56-bit effective key and is not considered secure for modern production systems.</span>
+  </aside>
+
+  <!-- Main Navigation Header -->
+  <header class="app-header">
+    <div class="brand-wrapper" id="brand-home" tabindex="0" role="button" aria-label="Return to Dashboard">
+      <div class="brand-icon-shield">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-title">DES <span class="vault-highlight">VAULT</span></div>
+        <div class="brand-subtitle">Universal File Cryptography</div>
+      </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="nav-bar" aria-label="Main Navigation">
+      <button class="nav-btn active" data-view="dashboard" id="nav-dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-btn" data-view="encrypt" id="nav-encrypt">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Encrypt
+      </button>
+      <button class="nav-btn" data-view="decrypt" id="nav-decrypt">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        Decrypt
+      </button>
+      <button class="nav-btn" data-view="lab" id="nav-lab">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
+        DES Lab
+      </button>
+      <button class="nav-btn" data-view="inspector" id="nav-inspector">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        File Inspector
+      </button>
+      <button class="nav-btn" data-view="history" id="nav-history">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        History
+      </button>
+      <button class="nav-btn" data-view="about" id="nav-about">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        About DES
+      </button>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button class="btn-header-demo" id="btn-header-demo" title="Guided Examiner Tour for Academic Presentation">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Demo DES
+      </button>
+      <button class="btn-header-test" id="btn-header-test" title="Run Automated FIPS 46-3 Test Vectors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Test Suite
+      </button>
+      <div class="badge-private" title="Encryption takes place entirely on your device">
+        <div class="pulse-dot"></div>
+        <span>Private Mode</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <main class="app-main">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: DASHBOARD                          -->
+    <!-- ========================================== -->
+    <section class="view-container active" id="view-dashboard">
+      <div class="hero-section">
+        <div class="hero-tag">Academic Cryptography Platform · FIPS 46-3</div>
+        <h1 class="hero-title">DES Vault — <span class="gradient-text">Universal File Encryption</span></h1>
+        <p class="hero-subtitle">
+          Encrypt arbitrary binary files using the authentic Data Encryption Standard (DES) algorithm and restore them with byte-for-byte perfection using the matching 8-byte key.
+        </p>
+        <div class="hero-badges">
+          <span class="hero-badge-pill">64-Bit Block Size</span>
+          <span class="hero-badge-pill">56-Bit Effective Key</span>
+          <span class="hero-badge-pill">16 Feistel Rounds</span>
+          <span class="hero-badge-pill">DES-CBC & DES-ECB</span>
+          <span class="hero-badge-pill">Custom .dvlt Container</span>
+          <span class="hero-badge-pill">SHA-256 Integrity Check</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Cards Grid -->
+      <div class="dashboard-actions-grid">
+        <!-- Encrypt Card -->
+        <div class="action-card encrypt-card">
+          <div class="action-card-header">
+            <div class="action-icon-circle">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <span class="action-step-tag">Step 01 / Protect</span>
+          </div>
+          <h2>Encrypt File</h2>
+          <p class="action-desc">
+            Upload any arbitrary binary file (PDF, DOCX, PNG, ZIP, MP4, code, or binary), inspect its File DNA, generate an 8-byte key, and seal it into an encrypted <code>.dvlt</code> container.
+          </p>
+          <button class="action-btn-main" id="dash-btn-encrypt">
+            <span>Encrypt a File</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+          <div class="quick-drop-area" id="dash-drop-encrypt">
+            <span>⚡ Or drag & drop any file here to begin</span>
+          </div>
+        </div>
+
+        <!-- Decrypt Card -->
+        <div class="action-card decrypt-card">
+          <div class="action-card-header">
+            <div class="action-icon-circle">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            </div>
+            <span class="action-step-tag">Step 02 / Restore</span>
+          </div>
+          <h2>Decrypt File</h2>
+          <p class="action-desc">
+            Restore a DES-encrypted <code>.dvlt</code> file using its 8-byte encryption key. The container validates the signature, decrypts blocks, verifies SHA-256 checksums, and restores the original file.
+          </p>
+          <button class="action-btn-main" id="dash-btn-decrypt">
+            <span>Decrypt a File</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+          <div class="quick-drop-area" id="dash-drop-decrypt">
+            <span>⚡ Or drag & drop a .dvlt file here to restore</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Vault Statistics Row -->
+      <div class="stats-banner">
+        <div class="stat-item">
+          <span class="stat-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Files Encrypted
+          </span>
+          <span class="stat-value cyan-val" id="stat-encrypted">0</span>
+          <span class="stat-subtext">Total encrypted sessions</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            Files Decrypted
+          </span>
+          <span class="stat-value green-val" id="stat-decrypted">0</span>
+          <span class="stat-subtext">Verified restorations</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Data Processed
+          </span>
+          <span class="stat-value" id="stat-bytes">0 KB</span>
+          <span class="stat-subtext">Binary bytes throughput</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Last Operation
+          </span>
+          <span class="stat-value" style="font-size: 1.1rem; padding-top: 6px;" id="stat-last-op">None</span>
+          <span class="stat-subtext" id="stat-last-time">Awaiting operation</span>
+        </div>
+      </div>
+
+      <!-- Quick Sample Files Showcase -->
+      <div class="sample-files-box">
+        <div class="sample-files-head">
+          <span class="sample-files-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Pre-loaded Academic Test Samples (1-Click Test)
+          </span>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">No file needed on your disk</span>
+        </div>
+        <div class="sample-files-grid" id="sample-files-container">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: ENCRYPT WORKFLOW                   -->
+    <!-- ========================================== -->
+    <section class="view-container" id="view-encrypt">
+      <div class="section-header-block">
+        <span class="section-tag">Stage 01 / Encryption Pipeline</span>
+        <h2 class="section-title">Encrypt Arbitrary Binary File</h2>
+        <p class="section-desc">
+          Upload any file format. The file is read directly as binary bytes, evaluated for entropy and SHA-256 fingerprint, encrypted with 16 Feistel rounds of DES, and packaged into a <code>.dvlt</code> container.
+        </p>
+      </div>
+
+      <div class="workflow-card">
+        <!-- Step 1: Upload Dropzone -->
+        <div class="dropzone-container" id="encrypt-dropzone">
+          <div class="dropzone-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+          </div>
+          <div class="dropzone-title">Drop any file here to encrypt</div>
+          <div class="dropzone-subtitle">PDF, Word, Excel, Images, Audio, Video, Archives, Code, or raw binary · Up to 50 MB</div>
+          <button type="button" class="dropzone-btn" id="btn-browse-encrypt">Browse File from Device</button>
+          <input type="file" id="input-encrypt-file" class="hidden-file-input">
+        </div>
+
+        <!-- Selected File Information Card -->
+        <div class="selected-file-card" id="card-encrypt-file-selected" style="display: none;">
+          <div class="file-card-left">
+            <div class="file-format-badge" id="encrypt-file-ext-badge">BIN</div>
+            <div class="file-details-col">
+              <span class="file-card-name" id="encrypt-file-name">filename.bin</span>
+              <div class="file-card-meta">
+                <span id="encrypt-file-type">MIME: application/octet-stream</span>
+                <span>•</span>
+                <span id="encrypt-file-size">0 KB</span>
+                <span>•</span>
+                <span id="encrypt-file-date">Just now</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="file-card-remove-btn" id="btn-remove-encrypt-file">Remove</button>
+        </div>
+
+        <!-- File DNA Analysis Card -->
+        <div class="file-dna-card" id="card-encrypt-dna" style="display: none;">
+          <div class="file-dna-head">
+            <span class="file-dna-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><path d="M12 2v20"/></svg>
+              File DNA & Integrity Analysis
+            </span>
+            <span style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">PRE-ENCRYPTION TELEMETRY</span>
+          </div>
+          <div class="file-dna-grid">
+            <div class="dna-data-box">
+              <div class="dna-box-label">SHA-256 Fingerprint Checksum</div>
+              <div class="dna-box-val" id="dna-encrypt-hash">Calculating...</div>
+            </div>
+            <div class="dna-data-box">
+              <div class="dna-box-label">DES Blocks & PKCS#7 Padding</div>
+              <div class="dna-box-val" id="dna-encrypt-blocks">— Blocks · — Bytes pad</div>
+            </div>
+            <div class="dna-data-box">
+              <div class="dna-box-label">Shannon Entropy (Randomness)</div>
+              <div class="dna-box-val" id="dna-encrypt-entropy">0.000 / 8.000 bits/byte</div>
+              <div class="entropy-meter-wrap">
+                <div class="entropy-bar-track">
+                  <div class="entropy-bar-fill" id="dna-entropy-fill" style="width: 0%;"></div>
+                </div>
+                <div class="entropy-tagline" id="dna-entropy-tag">Analyzing bytes...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- File Preview Container -->
+          <div class="file-preview-box" id="encrypt-preview-box" style="display: none;">
+            <div class="file-preview-title">File Content Preview</div>
+            <div id="encrypt-preview-content"></div>
+          </div>
+        </div>
+
+        <!-- Step 2: DES Key Management -->
+        <div class="key-mgmt-section" id="section-encrypt-key">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label style="font-weight: 700; font-size: 0.9375rem; color: #fff;">DES Encryption Key</label>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">64-bit (56 effective bits)</span>
+          </div>
+
+          <!-- Key Mode Tabs -->
+          <div class="key-tabs-row">
+            <button type="button" class="key-tab-btn active" data-format="ascii" id="key-tab-ascii">Text Key (8 ASCII Chars)</button>
+            <button type="button" class="key-tab-btn" data-format="hex" id="key-tab-hex">Hex Key (16 Hex Digits)</button>
+            <button type="button" class="key-tab-btn" data-format="passphrase" id="key-tab-pass">Passphrase Derivation (PBKDF2)</button>
+          </div>
+
+          <!-- Key Input Box -->
+          <div class="key-input-wrapper">
+            <input type="password" id="input-encrypt-key" class="key-input" placeholder="Enter 8-character DES key (e.g. MyKey123)" maxlength="16" autocomplete="off" spellcheck="false">
+          </div>
+
+          <!-- Key Action Buttons -->
+          <div class="key-actions-row">
+            <button type="button" class="btn-key-action btn-key-gen" id="btn-gen-encrypt-key">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+              Generate Secure Key
+            </button>
+            <button type="button" class="btn-key-action" id="btn-toggle-key-visibility">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Show Key
+            </button>
+            <button type="button" class="btn-key-action" id="btn-copy-encrypt-key">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              Copy Key
+            </button>
+            <button type="button" class="btn-key-action" id="btn-export-keyfile">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              Download Key (.deskey)
+            </button>
+            <button type="button" class="btn-key-action" id="btn-qr-key">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+              Show Key as QR
+            </button>
+          </div>
+
+          <!-- Parity Bits Telemetry -->
+          <div class="key-parity-breakdown">
+            <span>Effective Key: <strong>56 bits</strong></span>
+            <span class="parity-badge">8 Parity Bits Dropped (Bits 8, 16, 24, 32, 40, 48, 56, 64)</span>
+            <span>Block Size: <strong>64 bits</strong></span>
+          </div>
+        </div>
+
+        <!-- Step 3: Cipher Mode Selection -->
+        <div class="mode-select-row">
+          <label style="font-weight: 700; font-size: 0.9375rem; color: #fff;">Cipher Mode of Operation</label>
+          <div class="mode-options-grid">
+            <div class="mode-option-card selected" id="mode-card-cbc" data-mode="CBC">
+              <div class="mode-title">
+                <span>DES-CBC (Cipher Block Chaining)</span>
+                <span class="mode-recommended">Recommended</span>
+              </div>
+              <p class="mode-desc">Each block is XORed with the previous ciphertext block before encryption. Uses a fresh random 8-byte IV to prevent pattern leaks.</p>
+            </div>
+            <div class="mode-option-card" id="mode-card-ecb" data-mode="ECB">
+              <div class="mode-title">
+                <span>DES-ECB (Electronic Codebook)</span>
+                <span style="font-size: 0.7rem; color: var(--amber-warning);">Academic Demo Only</span>
+              </div>
+              <p class="mode-desc">Each 64-bit block is encrypted independently. Warning: identical plaintext blocks produce identical ciphertext blocks.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Encrypt Trigger Button -->
+        <div style="margin-top: 32px;">
+          <button type="button" class="action-btn-main" id="btn-run-encrypt" style="padding: 16px 24px; font-size: 1.05rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Encrypt & Build .dvlt Container</span>
+          </button>
+        </div>
+
+        <!-- Notification Banner -->
+        <div class="notification-banner" id="encrypt-notification"></div>
+
+        <!-- Animated Crypto Journey Timeline -->
+        <div class="crypto-journey-card" id="encrypt-journey-box">
+          <div class="journey-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Your File's Cryptographic Journey
+          </div>
+          <div class="journey-steps-list">
+            <div class="journey-step-item" id="j-step-1"><span class="step-circle">1</span><span>File Loaded & ArrayBuffer Extracted</span></div>
+            <div class="journey-step-item" id="j-step-2"><span class="step-circle">2</span><span>SHA-256 Checksum Fingerprint Calculated</span></div>
+            <div class="journey-step-item" id="j-step-3"><span class="step-circle">3</span><span>DES Key & 8-Byte Random IV Prepared</span></div>
+            <div class="journey-step-item" id="j-step-4"><span class="step-circle">4</span><span>64-Bit Blocks Segmented & PKCS#7 Padded</span></div>
+            <div class="journey-step-item" id="j-step-5"><span class="step-circle">5</span><span>16 Feistel Rounds Executed with 8 S-Boxes</span></div>
+            <div class="journey-step-item" id="j-step-6"><span class="step-circle">6</span><span>Secure .dvlt Binary Container Assembled</span></div>
+            <div class="journey-step-item" id="j-step-7"><span class="step-circle">7</span><span>Ready for Download</span></div>
+          </div>
+
+          <!-- Live Bits Visualization -->
+          <div class="live-blocks-animation">
+            <span class="anim-block" id="anim-block-1">01100101</span>
+            <span style="color: var(--text-dim);">→ IP →</span>
+            <span class="anim-block" id="anim-block-2">L₀ | R₀</span>
+            <span style="color: var(--text-dim);">→ 16 Rounds →</span>
+            <span class="anim-block" id="anim-block-3">85E81354</span>
+            <span style="color: var(--text-dim);">→ FP →</span>
+            <span class="anim-block" id="anim-block-4">CIPHERTEXT</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-bar-wrap">
+            <div class="progress-track">
+              <div class="progress-fill" id="encrypt-progress-fill"></div>
+            </div>
+            <div class="progress-meta">
+              <span id="encrypt-progress-text">Processing...</span>
+              <span id="encrypt-progress-pct">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Encryption Success Banner & Before/After Card -->
+        <div class="success-banner-box" id="encrypt-success-box" style="display: none;">
+          <div class="success-badge-icon">✓</div>
+          <h3 class="success-title">Encryption Successful!</h3>
+          <p class="success-subtitle">Your file has been encrypted using 16-round Feistel DES and packed into a standardized <code>.dvlt</code> container.</p>
+
+          <!-- Before / After Card -->
+          <div class="before-after-grid">
+            <div class="comparison-side-card">
+              <div class="comparison-tag">Original Plaintext</div>
+              <div class="comparison-filename" id="success-orig-name">file.pdf</div>
+              <div class="comparison-meta" id="success-orig-meta">3.7 MB · PDF Document</div>
+              <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 6px; font-family: var(--font-mono); word-break: break-all;" id="success-orig-hash">SHA-256: —</div>
+            </div>
+            <div class="comparison-arrow">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <span class="comparison-cipher-tag" id="success-mode-tag">DES-CBC · 16 Rounds</span>
+            </div>
+            <div class="comparison-side-card">
+              <div class="comparison-tag">Protected Container</div>
+              <div class="comparison-filename" id="success-enc-name" style="color: var(--cyan-bright);">file.pdf.dvlt</div>
+              <div class="comparison-meta" id="success-enc-meta">3.71 MB · DES Vault Container</div>
+              <div style="font-size: 0.7rem; color: var(--emerald-success); margin-top: 6px; font-family: var(--font-mono);">Format: DVLT v1.0</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="success-actions-row">
+            <button type="button" class="btn-download-main" id="btn-download-dvlt">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <span>Download Encrypted File (.dvlt)</span>
+            </button>
+            <button type="button" class="btn-secondary-action" id="btn-download-success-key">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <span>Export Key (.deskey)</span>
+            </button>
+            <button type="button" class="btn-secondary-action" id="btn-view-in-lab">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
+              <span>Inspect in DES Lab</span>
+            </button>
+            <button type="button" class="btn-secondary-action" id="btn-encrypt-another">
+              <span>Encrypt Another File</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: DECRYPT WORKFLOW                   -->
+    <!-- ========================================== -->
+    <section class="view-container" id="view-decrypt">
+      <div class="section-header-block">
+        <span class="section-tag">Stage 02 / Decryption & Integrity Verification</span>
+        <h2 class="section-title">Decrypt & Restore Original File</h2>
+        <p class="section-desc">
+          Upload any <code>.dvlt</code> encrypted container. The vault inspects the container header, requests the matching DES key, decrypts the 64-bit blocks, verifies the PKCS#7 padding, and validates the SHA-256 fingerprint against the original.
+        </p>
+      </div>
+
+      <div class="workflow-card">
+        <!-- Step 1: Upload .dvlt Container -->
+        <div class="dropzone-container" id="decrypt-dropzone">
+          <div class="dropzone-icon" style="color: var(--emerald-success); background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          </div>
+          <div class="dropzone-title">Drop your .dvlt encrypted file here</div>
+          <div class="dropzone-subtitle">Accepts DES Vault containers (.dvlt) created with this application</div>
+          <button type="button" class="dropzone-btn" id="btn-browse-decrypt">Browse Encrypted File</button>
+          <input type="file" id="input-decrypt-file" class="hidden-file-input" accept=".dvlt,*/*">
+        </div>
+
+        <!-- Container Inspection Telemetry Card -->
+        <div class="file-dna-card" id="card-decrypt-container-info" style="display: none; border-color: rgba(16, 185, 129, 0.3);">
+          <div class="file-dna-head">
+            <span class="file-dna-title" style="color: var(--emerald-success);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              DES Vault Container Signature Detected
+            </span>
+            <span style="font-size: 0.75rem; color: #34d399; font-family: var(--font-mono); background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px;">
+              SIGNATURE: DVLT v1.0
+            </span>
+          </div>
+          <div class="file-dna-grid">
+            <div class="dna-data-box">
+              <div class="dna-box-label">Original Filename & Format</div>
+              <div class="dna-box-val" id="dec-meta-name">—</div>
+            </div>
+            <div class="dna-data-box">
+              <div class="dna-box-label">Cipher Algorithm & Mode</div>
+              <div class="dna-box-val" id="dec-meta-algo">DES · CBC Mode</div>
+            </div>
+            <div class="dna-data-box">
+              <div class="dna-box-label">Stored SHA-256 Checksum Fingerprint</div>
+              <div class="dna-box-val" id="dec-meta-hash" style="font-size: 0.75rem;">—</div>
+            </div>
+            <div class="dna-data-box">
+              <div class="dna-box-label">Encrypted Size & IV</div>
+              <div class="dna-box-val" id="dec-meta-iv">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Key Entry / Keyfile Dropzone -->
+        <div class="key-mgmt-section" id="section-decrypt-key">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label style="font-weight: 700; font-size: 0.9375rem; color: #fff;">DES Decryption Key</label>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Enter matching 8-byte key or load .deskey</span>
+          </div>
+
+          <div class="key-input-wrapper">
+            <input type="password" id="input-decrypt-key" class="key-input" placeholder="Enter matching DES key (8 chars or 16 hex digits)" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="key-actions-row">
+            <button type="button" class="btn-key-action" id="btn-toggle-decrypt-key">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Show Key
+            </button>
+            <button type="button" class="btn-key-action" id="btn-load-keyfile">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+              Load Keyfile (.deskey)
+            </button>
+            <input type="file" id="input-keyfile-upload" class="hidden-file-input" accept=".deskey,.txt">
+          </div>
+        </div>
+
+        <!-- Main Decrypt Trigger Button -->
+        <div style="margin-top: 32px;">
+          <button type="button" class="action-btn-main" id="btn-run-decrypt" style="background: linear-gradient(135deg, var(--emerald-success), #059669); padding: 16px 24px; font-size: 1.05rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+            <span>Decrypt & Verify Integrity</span>
+          </button>
+        </div>
+
+        <!-- Decrypt Notification Banner -->
+        <div class="notification-banner" id="decrypt-notification"></div>
+
+        <!-- Decryption Progress Bar -->
+        <div class="crypto-journey-card" id="decrypt-journey-box">
+          <div class="journey-header" style="color: var(--emerald-success);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Decryption & SHA-256 Verification Pipeline
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-track">
+              <div class="progress-fill" id="decrypt-progress-fill" style="background: linear-gradient(90deg, var(--emerald-success), #34d399);"></div>
+            </div>
+            <div class="progress-meta">
+              <span id="decrypt-progress-text">Decrypting blocks...</span>
+              <span id="decrypt-progress-pct">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decryption Success Card -->
+        <div class="success-banner-box" id="decrypt-success-box" style="display: none;">
+          <div class="success-badge-icon">✓</div>
+          <h3 class="success-title">Decryption & Verification Succeeded!</h3>
+          <p class="success-subtitle" style="color: #6ee7b7;">
+            <strong>Integrity Verified ✓</strong> — The reconstructed SHA-256 fingerprint matches the original file checksum byte-for-byte.
+          </p>
+
+          <!-- Before / After Card (Reversed) -->
+          <div class="before-after-grid">
+            <div class="comparison-side-card">
+              <div class="comparison-tag">Encrypted Source</div>
+              <div class="comparison-filename" id="dec-success-source-name">file.dvlt</div>
+              <div class="comparison-meta" id="dec-success-source-meta">3.71 MB · DVLT Container</div>
+            </div>
+            <div class="comparison-arrow">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <span class="comparison-cipher-tag">Restored & Verified</span>
+            </div>
+            <div class="comparison-side-card">
+              <div class="comparison-tag">Recovered Original</div>
+              <div class="comparison-filename" id="dec-success-orig-name" style="color: var(--emerald-success);">file.pdf</div>
+              <div class="comparison-meta" id="dec-success-orig-meta">3.7 MB · Original Binary Format</div>
+            </div>
+          </div>
+
+          <!-- Restored File Preview Box -->
+          <div class="file-preview-box" id="decrypt-preview-box" style="display: none; text-align: left; margin: 16px 0;">
+            <div class="file-preview-title">Restored File Preview</div>
+            <div id="decrypt-preview-content"></div>
+          </div>
+
+          <!-- Download Restored File Actions -->
+          <div class="success-actions-row">
+            <button type="button" class="btn-download-main" id="btn-download-restored" style="background: linear-gradient(135deg, var(--emerald-success), #059669); box-shadow: 0 4px 18px var(--emerald-glow);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <span>Download Restored File</span>
+            </button>
+            <button type="button" class="btn-secondary-action" id="btn-decrypt-another">
+              <span>Decrypt Another File</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 4: DES LAB                            -->
+    <!-- ========================================== -->
+    <section class="view-container" id="view-lab">
+      <div class="section-header-block">
+        <span class="section-tag">Stage 03 / Deep Cryptographic Analysis</span>
+        <h2 class="section-title">DES Cryptography Lab</h2>
+        <p class="section-desc">
+          Interactive educational workbench demonstrating the inner mechanics of the 16-round Feistel network, S-Box substitutions, the Key Schedule, and the ECB vs CBC security experiment.
+        </p>
+      </div>
+
+      <div class="lab-grid">
+        <!-- Module 1: 16-Round Feistel Visualizer -->
+        <div class="lab-card">
+          <div class="lab-card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
+            16-Round Feistel Network Visualizer
+          </div>
+          <p class="lab-card-desc">
+            Test a 64-bit plaintext block and 64-bit key to trace the complete Initial Permutation, 16 Feistel rounds with S-Box lookups, the 32-bit swap, and the Final Permutation.
+          </p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 20px;">
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">64-Bit Plaintext (16 Hex or 8 ASCII)</label>
+              <input type="text" id="lab-input-block" class="key-input" value="0123456789ABCDEF" style="font-size: 0.875rem;">
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">64-Bit Key (16 Hex or 8 ASCII)</label>
+              <input type="text" id="lab-input-key" class="key-input" value="133457799BBCDFF1" style="font-size: 0.875rem;">
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button type="button" class="btn-download-main" id="btn-run-feistel-sim" style="padding: 10px 18px; font-size: 0.875rem;">Simulate</button>
+            </div>
+          </div>
+
+          <!-- Simulation Flow Results -->
+          <div class="feistel-stage-box" id="feistel-output-box">
+            <!-- Node: Input Block -->
+            <div class="feistel-flow-node">
+              <span class="node-title">64-Bit Plaintext Input</span>
+              <span class="node-data" id="lab-node-plain">0123456789ABCDEF</span>
+            </div>
+
+            <!-- Node: IP -->
+            <div class="feistel-flow-node">
+              <span class="node-title">Initial Permutation (IP) → L₀ | R₀</span>
+              <span class="node-data" id="lab-node-ip">L₀: CC00CCFF · R₀: F0AAF0AA</span>
+            </div>
+
+            <!-- 16 Rounds Accordion -->
+            <div style="margin: 16px 0;">
+              <div style="font-size: 0.8125rem; font-weight: 700; color: var(--cyan-bright); margin-bottom: 8px;">
+                16 Feistel Rounds (Click any round to expand S-Box lookups & P-Permutation):
+              </div>
+              <div class="rounds-accordion" id="lab-rounds-list">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Node: 32-Bit Swap & FP -->
+            <div class="feistel-flow-node">
+              <span class="node-title">Round 16 Swap (R₁₆, L₁₆) → Final Permutation (FP)</span>
+              <span class="node-data" id="lab-node-prefp">—</span>
+            </div>
+
+            <!-- Node: 64-Bit Ciphertext -->
+            <div class="feistel-flow-node" style="border-color: var(--cyan-bright); background: rgba(6, 182, 212, 0.08);">
+              <span class="node-title" style="color: var(--cyan-bright);">64-Bit Ciphertext Output</span>
+              <span class="node-data" id="lab-node-cipher" style="color: var(--cyan-bright); font-weight: 700;">85E813540F0AB405</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Module 2: Key Schedule & Subkeys -->
+        <div class="lab-card">
+          <div class="lab-card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+            Key Schedule & 16 Round Subkeys (PC-1, Left Shifts, PC-2)
+          </div>
+          <p class="lab-card-desc">
+            Visual breakdown showing how the 64-bit input key drops 8 parity bits via PC-1, splits into 28-bit C and D registers, undergoes circular left shifts, and produces 16 distinct 48-bit subkeys via PC-2.
+          </p>
+          <div id="lab-keyschedule-container" style="overflow-x: auto; max-height: 400px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Module 3: ECB vs CBC Security Experiment -->
+        <div class="lab-card">
+          <div class="lab-card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+            ECB vs CBC Security Experiment (Identical Block Leakage)
+          </div>
+          <p class="lab-card-desc">
+            Encrypt two identical 8-byte plaintext blocks (<code>ATTACKAT</code> and <code>ATTACKAT</code>). Compare the resulting ciphertexts in ECB mode versus CBC mode to understand why CBC is essential.
+          </p>
+          <div style="text-align: center; margin: 16px 0;">
+            <button type="button" class="btn-download-main" id="btn-run-ecb-cbc-exp" style="margin: 0 auto;">Run Live Experiment</button>
+          </div>
+          <div class="exp-demo-box" id="ecb-cbc-results-box">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 5: FILE INSPECTOR                     -->
+    <!-- ========================================== -->
+    <section class="view-container" id="view-inspector">
+      <div class="section-header-block">
+        <span class="section-tag">Utility / Telemetry</span>
+        <h2 class="section-title">Binary File Inspector & Hex Analyzer</h2>
+        <p class="section-desc">
+          Inspect arbitrary files to compute cryptographic fingerprints, Shannon entropy, byte-frequency distributions, and examine raw binary headers in hex.
+        </p>
+      </div>
+
+      <div class="workflow-card">
+        <div class="dropzone-container" id="inspector-dropzone">
+          <div class="dropzone-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <div class="dropzone-title">Drop any file or .dvlt container to inspect</div>
+          <div class="dropzone-subtitle">Generates comprehensive File DNA, Shannon entropy score, and 256-byte hex dump</div>
+          <button type="button" class="dropzone-btn" id="btn-browse-inspector">Browse File</button>
+          <input type="file" id="input-inspector-file" class="hidden-file-input">
+        </div>
+
+        <div id="inspector-results" style="display: none; margin-top: 24px;">
+          <!-- Telemetry grid populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 6: OPERATION HISTORY                  -->
+    <!-- ========================================== -->
+    <section class="view-container" id="view-history">
+      <div class="section-header-block">
+        <span class="section-tag">Audit Log</span>
+        <h2 class="section-title">Cryptographic Operation History</h2>
+        <p class="section-desc">
+          Local audit record of all file encryption and decryption operations performed during your session. Keys and sensitive file payloads are never stored.
+        </p>
+      </div>
+
+      <div class="workflow-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-secondary-action" id="btn-clear-history">Clear History</button>
+            <button type="button" class="btn-secondary-action" id="btn-export-history">Export History (JSON)</button>
+          </div>
+          <span style="font-size: 0.8125rem; color: var(--text-dim);" id="history-count-badge">0 Operations Logged</span>
+        </div>
+
+        <div class="history-table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Operation</th>
+                <th>Filename</th>
+                <th>File Size</th>
+                <th>Cipher Mode</th>
+                <th>SHA-256 Fingerprint</th>
+                <th>Status</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 7: ABOUT DES                          -->
+    <!-- ========================================== -->
+    <section class="view-container" id="view-about">
+      <div class="section-header-block">
+        <span class="section-tag">Academic Documentation</span>
+        <h2 class="section-title">About the Data Encryption Standard (DES)</h2>
+        <p class="section-desc">
+          Historical overview, cryptographic mechanics, Feistel network architecture, and comparative analysis with modern standards.
+        </p>
+      </div>
+
+      <div class="about-card">
+        <h3>1. Historical Origin</h3>
+        <p>
+          The Data Encryption Standard (DES) was developed in the early 1970s by IBM, based on the Lucifer cipher, and submitted to the National Bureau of Standards (NBS, now NIST). In 1977, it was published as <strong>FIPS PUB 46</strong> and became the worldwide standard for commercial encryption and financial transactions for over two decades.
+        </p>
+        <p>
+          DES is a symmetric-key block cipher, meaning the same secret key is used for both encryption and decryption. Decryption is performed using the exact same algorithm as encryption, simply running the 16 subkeys in reverse order ($K_{16}$ down to $K_1$).
+        </p>
+
+        <h3>2. Why 56 Effective Key Bits?</h3>
+        <p>
+          Although a DES key is represented as 64 bits (8 bytes), every 8th bit (bits 8, 16, 24, 32, 40, 48, 56, 64) is designated as an odd parity bit for error detection. The initial key permutation (PC-1) discards these 8 parity bits, leaving exactly <strong>56 effective security bits</strong>.
+        </p>
+        <p>
+          With $2^{56} \approx 7.2 \times 10^{16}$ possible keys, DES was considered secure against 1970s hardware. However, in 1998, the Electronic Frontier Foundation (EFF) built the custom "Deep Crack" hardware machine, which brute-forced a DES key in 56 hours. Modern clusters or GPUs can exhaust the 56-bit space in minutes, which led NIST to formally withdraw DES in 2005.
+        </p>
+
+        <h3>3. The 16-Round Feistel Network</h3>
+        <p>
+          DES processes data in 64-bit blocks. The block is initially permuted (IP) and split into two 32-bit halves: $L_0$ and $R_0$. Across 16 rounds, the right half $R_{i-1}$ is expanded to 48 bits, XORed with the 48-bit round subkey $K_i$, substituted through 8 non-linear S-boxes (each taking 6 bits and producing 4 bits), and permuted through the P-box. The result is XORed with $L_{i-1}$ to form the new right half $R_i$, while the old right half becomes the new left half $L_i$.
+        </p>
+
+        <h3>4. Cryptographic Comparison Table</h3>
+        <table class="crypto-compare-table">
+          <thead>
+            <tr>
+              <th>Cipher</th>
+              <th>Block Size</th>
+              <th>Key Size</th>
+              <th>Effective Security</th>
+              <th>Architecture</th>
+              <th>NIST Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Single DES</strong></td>
+              <td>64 bits (8 B)</td>
+              <td>64 bits (8 B)</td>
+              <td>56 bits</td>
+              <td>16-Round Feistel</td>
+              <td><span style="color: var(--rose-danger); font-weight: 700;">Withdrawn (Academic Only)</span></td>
+            </tr>
+            <tr>
+              <td><strong>Triple DES (3DES)</strong></td>
+              <td>64 bits (8 B)</td>
+              <td>192 bits (24 B)</td>
+              <td>112 bits</td>
+              <td>48-Round Feistel</td>
+              <td><span style="color: var(--amber-warning); font-weight: 700;">Deprecated (Sweet32 attack)</span></td>
+            </tr>
+            <tr>
+              <td><strong>AES-128</strong></td>
+              <td>128 bits (16 B)</td>
+              <td>128 bits (16 B)</td>
+              <td>128 bits</td>
+              <td>10-Round SPN</td>
+              <td><span style="color: var(--emerald-success); font-weight: 700;">Approved Standard</span></td>
+            </tr>
+            <tr>
+              <td><strong>AES-256</strong></td>
+              <td>128 bits (16 B)</td>
+              <td>256 bits (32 B)</td>
+              <td>256 bits</td>
+              <td>14-Round SPN</td>
+              <td><span style="color: var(--emerald-success); font-weight: 700;">Approved Standard (Top Secret)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL 1: QR CODE KEY DISPLAY               -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="modal-qr">
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" id="btn-close-qr-modal">✕</button>
+      <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 8px;">DES Encryption Key QR Code</h3>
+      <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px 14px; font-size: 0.75rem; color: #fde68a; margin-bottom: 16px;">
+        ⚠️ <strong>Security Warning:</strong> Anyone who scans this QR code and has your .dvlt file can decrypt your data. Use only for academic device transfer.
+      </div>
+      <div id="modal-qr-container" style="display: flex; justify-content: center; margin: 16px 0;"></div>
+      <div style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--cyan-bright); text-align: center; word-break: break-all;" id="modal-qr-key-text"></div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 2: AUTOMATED TEST SUITE RUNNER       -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="modal-tests">
+    <div class="modal-box" style="max-width: 680px;">
+      <button type="button" class="modal-close-btn" id="btn-close-test-modal">✕</button>
+      <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Automated FIPS 46-3 Test Suite</h3>
+      <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 16px;">
+        Validates known answer vectors, subkey schedules, PKCS#7 padding across all modulos, binary file round-trips, wrong key rejection, and tamper resistance.
+      </p>
+      <button type="button" class="btn-download-main" id="btn-trigger-tests-run" style="width: 100%; padding: 10px; font-size: 0.875rem;">Run All Automated Tests</button>
+      <div class="test-results-list" id="modal-test-results-list"></div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 3: GUIDED DEMO EXAMINER TOUR         -->
+  <!-- ========================================== -->
+  <div class="modal-overlay" id="modal-demo">
+    <div class="modal-box" style="max-width: 720px;">
+      <button type="button" class="modal-close-btn" id="btn-close-demo-modal">✕</button>
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--cyan-bright); text-transform: uppercase; margin-bottom: 4px;">Examiner Presentation Tour</div>
+      <h3 style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-bottom: 8px;">Guided DES Demonstration Wizard</h3>
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 20px;">
+        1-Click guided flow to showcase all project capabilities to an examiner or lecturer:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;" id="demo-tour-steps">
+        <div class="feistel-flow-node" style="cursor: pointer;" id="demo-step-1">
+          <div>
+            <div style="font-weight: 700; color: #fff;">Step 1: Load Sample PDF Document</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Loads valid binary PDF with real stream and font structure.</div>
+          </div>
+          <button type="button" class="btn-secondary-action" style="padding: 6px 12px; font-size: 0.75rem;">Select</button>
+        </div>
+        <div class="feistel-flow-node" style="cursor: pointer;" id="demo-step-2">
+          <div>
+            <div style="font-weight: 700; color: #fff;">Step 2: Generate CSPRNG DES Key & Inspect Parity</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Generates 8-byte key and highlights 56-bit effective space.</div>
+          </div>
+          <button type="button" class="btn-secondary-action" style="padding: 6px 12px; font-size: 0.75rem;">Generate</button>
+        </div>
+        <div class="feistel-flow-node" style="cursor: pointer;" id="demo-step-3">
+          <div>
+            <div style="font-weight: 700; color: #fff;">Step 3: Encrypt to .dvlt Container & Verify Hash</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Runs 16-round Feistel DES-CBC and computes pre-encryption SHA-256.</div>
+          </div>
+          <button type="button" class="btn-secondary-action" style="padding: 6px 12px; font-size: 0.75rem;">Encrypt</button>
+        </div>
+        <div class="feistel-flow-node" style="cursor: pointer;" id="demo-step-4">
+          <div>
+            <div style="font-weight: 700; color: #fff;">Step 4: Test Wrong Key Rejection</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Proves security validation safely aborts on incorrect keys without producing corrupted output.</div>
+          </div>
+          <button type="button" class="btn-secondary-action" style="padding: 6px 12px; font-size: 0.75rem;">Test Wrong Key</button>
+        </div>
+        <div class="feistel-flow-node" style="cursor: pointer;" id="demo-step-5">
+          <div>
+            <div style="font-weight: 700; color: #fff;">Step 5: Decrypt with Correct Key & Confirm 100% Byte Identity</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Recalculates SHA-256 to confirm exact match with original binary.</div>
+          </div>
+          <button type="button" class="btn-secondary-action" style="padding: 6px 12px; font-size: 0.75rem;">Restore</button>
+        </div>
+      </div>
+      <div id="demo-tour-feedback" style="margin-top: 16px; font-family: var(--font-mono); font-size: 0.8125rem; color: var(--cyan-bright); min-height: 24px;"></div>
+    </div>
+  </div>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <div class="footer-copy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span><strong>DES Vault</strong> — Universal File Encryption & Decryption System</span>
+      </div>
+      <div>
+        <span>Academic Cybersecurity Project · 100% Client-Side Private Mode · FIPS 46-3 Standard</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

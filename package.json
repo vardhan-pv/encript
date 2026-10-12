@@ -1,0 +1,11 @@
+{
+  "name": "des-vault",
+  "version": "1.0.0",
+  "description": "DES Vault — Universal File Encryption & Decryption System",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/runTests.mjs"
+  },
+  "keywords": ["des", "cryptography", "cybersecurity", "cbc", "feistel", "fips-46-3"],
+  "license": "MIT"
+}
